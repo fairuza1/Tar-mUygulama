@@ -37,7 +37,7 @@ class _RegisterState extends State<Register> {
           child: Column(
             children: [
               Container(
-                height: 760,
+                height: 700,
                 width: MediaQuery.of(context).size.width,
                 decoration: BoxDecoration(
                   color: const Color.fromRGBO(233, 65, 82, 1),

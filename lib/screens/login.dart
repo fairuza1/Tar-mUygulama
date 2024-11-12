@@ -44,7 +44,7 @@ class _LoginState extends State<Login> {
           child: Column(
             children: [
               Container(
-                height: 750,
+                height: 700,
                 width: MediaQuery.of(context).size.width,
                 decoration: BoxDecoration(
                   color: const Color.fromRGBO(233, 65, 82, 1),
