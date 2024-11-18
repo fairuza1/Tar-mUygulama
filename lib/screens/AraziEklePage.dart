@@ -195,3 +195,4 @@ class _AraziEklePageState extends State<AraziEklePage> {
     );
   }
 }
+//final response = await http.get(Uri.parse('http://localhost:8080/lands'));
