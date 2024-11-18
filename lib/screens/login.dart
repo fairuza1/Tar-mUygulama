@@ -16,7 +16,7 @@ class Login extends StatefulWidget {
 class _LoginState extends State<Login> {
   final _formKey = GlobalKey<FormState>();
   User user = User("", ""); // User nesnesini burada oluşturun
-  String url = "http://10.0.2.2:8080/login";
+  String url = "http://10.0.2.2:8080/users/login";
 
   Future<void> save() async {
     var res = await http.post(

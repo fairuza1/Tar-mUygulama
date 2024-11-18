@@ -14,7 +14,7 @@ class Register extends StatefulWidget {
 class _RegisterState extends State<Register> {
   final _formKey = GlobalKey<FormState>();
   User user = User("", ""); // User nesnesini burada oluşturun
-  String url = "http://10.0.2.2:8080/register";
+  String url = "http://10.0.2.2:8080/users/register";
 
   Future<void> save() async {
     var res = await http.post(
