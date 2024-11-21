@@ -31,8 +31,9 @@ class _ArazilerimiGosterPageState extends State<ArazilerimiGosterPage> {
     }
 
     try {
+      // Kullanıcı ID'si ile birlikte arazileri çekiyoruz
       final response = await http.get(
-        Uri.parse('http://10.0.2.2:8080/lands'),
+        Uri.parse('http://10.0.2.2:8080/lands?userId=$userId'),
         headers: {'Content-Type': 'application/json'},
       );
 
