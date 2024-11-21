@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 
 class ArazilerimiGosterPage extends StatefulWidget {
   const ArazilerimiGosterPage({Key? key}) : super(key: key);
@@ -11,34 +11,46 @@ class ArazilerimiGosterPage extends StatefulWidget {
 }
 
 class _ArazilerimiGosterPageState extends State<ArazilerimiGosterPage> {
-  List<Map<String, dynamic>> araziler = [];
+  List<dynamic> lands = [];
+  bool isLoading = true;
 
   @override
   void initState() {
     super.initState();
-    _fetchAraziler();
+    _fetchLands();
   }
 
-  Future<void> _fetchAraziler() async {
+  // Backend'den arazileri çek
+  Future<void> _fetchLands() async {
+    final prefs = await SharedPreferences.getInstance();
+    final userId = prefs.getInt('userId');
+
+    if (userId == null) {
+      _showSnackbar('Kullanıcı bilgileri bulunamadı.', Colors.red);
+      return;
+    }
+
     try {
-      final response = await http.get(Uri.parse('http://10.0.2.2:8080/lands'));
+      final response = await http.get(
+        Uri.parse('http://10.0.2.2:8080/lands'),
+        headers: {'Content-Type': 'application/json'},
+      );
 
       if (response.statusCode == 200) {
-        // Eğer yanıt başarılıysa, JSON verisini çözümle
-        String decodedBody = utf8.decode(response.bodyBytes);
-        List<dynamic> data = json.decode(decodedBody);
-
         setState(() {
-          araziler = data.map((item) => item as Map<String, dynamic>).toList();
+          lands = json.decode(response.body);
+          isLoading = false;
         });
       } else {
-        _showSnackbar('Araziler alınamadı.', Colors.red);
+        _showSnackbar(
+            'Araziler yüklenemedi. Durum Kodu: ${response.statusCode}', Colors.red);
       }
     } catch (e) {
       _showSnackbar('Hata: $e', Colors.red);
     }
   }
 
+  // Snackbar gösterme
   void _showSnackbar(String message, Color color) {
     final snackBar = SnackBar(
       content: Text(message),
@@ -52,67 +64,44 @@ class _ArazilerimiGosterPageState extends State<ArazilerimiGosterPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Arazilerimi Göster'),
+        title: const Text('Arazilerim'),
       ),
-      body: araziler.isEmpty
+      body: isLoading
           ? const Center(child: CircularProgressIndicator())
-          : Padding(
-        padding: const EdgeInsets.all(8.0),
-        child: ListView.builder(
-          itemCount: araziler.length,
-          itemBuilder: (context, index) {
-            final arazi = araziler[index];
-            return Card(
-              elevation: 5,
-              margin: const EdgeInsets.symmetric(vertical: 8.0),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      arazi['name'] ?? 'İsimsiz Arazi',
-                      style: GoogleFonts.notoSans(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      'Büyüklük: ${arazi['landSize']} hektar',
-                      style: GoogleFonts.notoSans(fontSize: 16),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      'Şehir: ${arazi['city']}',
-                      style: GoogleFonts.notoSans(
-                        fontSize: 14,
-                        color: Colors.grey[600],
-                      ),
-                    ),
-                    Text(
-                      'İlçe: ${arazi['district']}',
-                      style: GoogleFonts.notoSans(
-                        fontSize: 14,
-                        color: Colors.grey[600],
-                      ),
-                    ),
-                  if (arazi['village'] != null) // Köy/Mahalle varsa göster
-              Text(
-            'Köy/Mahalle: ${arazi['village']}',
-              style: GoogleFonts.notoSans(
-                fontSize: 14,
-                color: Colors.grey[600],),
-              ),
-                  ],
-                ),
-              ),
-            );
-          },
+          : lands.isEmpty
+          ? const Center(
+        child: Text(
+          'Hiçbir arazi bulunamadı.',
+          style: TextStyle(fontSize: 16, color: Colors.grey),
         ),
+      )
+          : ListView.builder(
+        itemCount: lands.length,
+        itemBuilder: (context, index) {
+          final land = lands[index];
+          return Card(
+            margin: const EdgeInsets.symmetric(
+                vertical: 8.0, horizontal: 16.0),
+            child: ListTile(
+              title: Text(
+                land['name'] ?? 'Bilinmeyen Arazi',
+                style: const TextStyle(
+                    fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+              subtitle: Text(
+                '${land['city'] ?? 'Bilinmeyen Şehir'} - ${land['district'] ?? 'Bilinmeyen İlçe'}',
+                style: const TextStyle(fontSize: 14),
+              ),
+              trailing: Text(
+                '${land['landSize'] ?? 0} hektar',
+                style: const TextStyle(fontSize: 14),
+              ),
+              onTap: () {
+                // Detaylar sayfasına yönlendirme (gerekirse)
+              },
+            ),
+          );
+        },
       ),
     );
   }

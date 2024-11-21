@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
 import 'dashboard.dart';
 import 'register.dart';
+import 'package:shared_preferences/shared_preferences.dart'; // SharedPreferences'i içe aktar
 import '../models/user.dart'; // User sınıfını içe aktar
 
 class Login extends StatefulWidget {
@@ -18,21 +19,59 @@ class _LoginState extends State<Login> {
   User user = User("", ""); // User nesnesini burada oluşturun
   String url = "http://10.0.2.2:8080/users/login";
 
+  // Kullanıcıyı giriş işlemi ve ID'yi kaydetme
+  // Kullanıcıyı giriş işlemi ve ID'yi kaydetme
   Future<void> save() async {
     var res = await http.post(
       Uri.parse(url),
       headers: {'Content-Type': 'application/json'},
       body: json.encode({'email': user.email, 'password': user.password}),
     );
-    print(res.body);
-    if (res.body.isNotEmpty) {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(
-          builder: (context) => Dashboard(key: UniqueKey()),
-        ),
-      );
+
+    // Debugging: Ham JSON verisini yazdırma
+    print('Raw response body: ${res.body}');
+
+    try {
+      if (res.statusCode == 200 && res.body.isNotEmpty) {
+        var responseData = json.decode(res.body); // JSON çözümlemesi
+
+        // Debugging: Çözümlenen veriyi yazdırma
+        print('Decoded response: $responseData');
+
+        // Gelen yanıt içerisinde userId'yi al
+        int userId = responseData['id']; // Örneğin 'id' alanını kullanın
+
+        // Kullanıcı ID'sini konsola yazdır
+        print('Giriş yapan kullanıcının ID\'si: $userId');
+
+        // SharedPreferences'a userId'yi kaydet
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setInt('userId', userId);
+
+        // Kullanıcıyı Dashboard'a yönlendir
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (context) => Dashboard(key: UniqueKey()),
+          ),
+        );
+      } else {
+        _showSnackbar('Giriş başarısız', Colors.red);
+      }
+    } catch (e) {
+      print('Error parsing JSON: $e');
+      _showSnackbar('Veri işlenirken bir hata oluştu', Colors.red);
     }
+  }
+
+
+  void _showSnackbar(String message, Color color) {
+    final snackBar = SnackBar(
+      content: Text(message),
+      backgroundColor: color,
+      duration: Duration(seconds: 3),
+    );
+    ScaffoldMessenger.of(context).showSnackBar(snackBar);
   }
 
   @override
@@ -86,7 +125,7 @@ class _LoginState extends State<Login> {
                       ),
                       TextFormField(
                         onChanged: (val) {
-                          user.email = val; // User nesnesinin email alanını güncelle
+                          user.email = val;
                         },
                         validator: (value) {
                           if (value == null || value.isEmpty) {
@@ -118,7 +157,7 @@ class _LoginState extends State<Login> {
                       TextFormField(
                         obscureText: true,
                         onChanged: (val) {
-                          user.password = val; // User nesnesinin password alanını güncelle
+                          user.password = val;
                         },
                         validator: (value) {
                           if (value == null || value.isEmpty) {

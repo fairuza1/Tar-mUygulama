@@ -102,25 +102,28 @@ class _AraziEklePageState extends State<AraziEklePage> {
       'city': selectedIl,
       'district': selectedIlce,
       'village': selectedKoy,
-      'user': {'id': userId}
+      'userId': userId
     };
 
     try {
       final response = await http.post(
-        Uri.parse('http://10.0.2.2:8080/lands'), // localhost yerine 10.0.2.2 kullanmalısınız
+        Uri.parse('http://10.0.2.2:8080/lands'),
         headers: {'Content-Type': 'application/json'},
         body: json.encode(newLand),
       );
+      print('Response status: ${response.statusCode}');
+      print('Response body: ${response.body}');
 
       if (response.statusCode == 200) {
         _showSnackbar('Arazi başarıyla kaydedildi!', Colors.green);
         Navigator.pushNamed(context, '/land-list');
       } else {
-        _showSnackbar('Arazi kaydedilemedi.', Colors.red);
+        _showSnackbar('Arazi kaydedilemedi. Durum Kodu: ${response.statusCode}', Colors.red);
       }
     } catch (e) {
       _showSnackbar('Hata: $e', Colors.red);
     }
+
   }
 
   // Snackbar mesajı gösterme
@@ -195,4 +198,3 @@ class _AraziEklePageState extends State<AraziEklePage> {
     );
   }
 }
-//final response = await http.get(Uri.parse('http://localhost:8080/lands'));
