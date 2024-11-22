@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 class ArazilerimiGosterPage extends StatefulWidget {
   const ArazilerimiGosterPage({Key? key}) : super(key: key);
@@ -20,7 +21,6 @@ class _ArazilerimiGosterPageState extends State<ArazilerimiGosterPage> {
     _fetchLands();
   }
 
-  // Backend'den arazileri çek
   Future<void> _fetchLands() async {
     final prefs = await SharedPreferences.getInstance();
     final userId = prefs.getInt('userId');
@@ -31,15 +31,20 @@ class _ArazilerimiGosterPageState extends State<ArazilerimiGosterPage> {
     }
 
     try {
-      // Kullanıcı ID'si ile birlikte arazileri çekiyoruz
       final response = await http.get(
         Uri.parse('http://10.0.2.2:8080/lands?userId=$userId'),
         headers: {'Content-Type': 'application/json'},
       );
 
       if (response.statusCode == 200) {
+        final decodedResponse = utf8.decode(response.bodyBytes); // UTF-8 ile çözümleme
         setState(() {
-          lands = json.decode(response.body);
+          lands = json.decode(decodedResponse);
+          isLoading = false;
+        });
+      } else if (response.statusCode == 204) {
+        setState(() {
+          lands = [];
           isLoading = false;
         });
       } else {
@@ -51,7 +56,6 @@ class _ArazilerimiGosterPageState extends State<ArazilerimiGosterPage> {
     }
   }
 
-  // Snackbar gösterme
   void _showSnackbar(String message, Color color) {
     final snackBar = SnackBar(
       content: Text(message),
@@ -65,15 +69,18 @@ class _ArazilerimiGosterPageState extends State<ArazilerimiGosterPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Arazilerim'),
+        title: Text('Arazilerim', style: GoogleFonts.notoSans()),
       ),
       body: isLoading
           ? const Center(child: CircularProgressIndicator())
           : lands.isEmpty
-          ? const Center(
+          ? Center(
         child: Text(
           'Hiçbir arazi bulunamadı.',
-          style: TextStyle(fontSize: 16, color: Colors.grey),
+          style: GoogleFonts.notoSans(
+            fontSize: 16,
+            color: Colors.grey,
+          ),
         ),
       )
           : ListView.builder(
@@ -82,24 +89,25 @@ class _ArazilerimiGosterPageState extends State<ArazilerimiGosterPage> {
           final land = lands[index];
           return Card(
             margin: const EdgeInsets.symmetric(
-                vertical: 8.0, horizontal: 16.0),
+              vertical: 8.0,
+              horizontal: 16.0,
+            ),
             child: ListTile(
               title: Text(
                 land['name'] ?? 'Bilinmeyen Arazi',
-                style: const TextStyle(
-                    fontSize: 18, fontWeight: FontWeight.bold),
+                style: GoogleFonts.notoSans(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
               subtitle: Text(
                 '${land['city'] ?? 'Bilinmeyen Şehir'} - ${land['district'] ?? 'Bilinmeyen İlçe'}',
-                style: const TextStyle(fontSize: 14),
+                style: GoogleFonts.notoSans(fontSize: 14),
               ),
               trailing: Text(
                 '${land['landSize'] ?? 0} hektar',
-                style: const TextStyle(fontSize: 14),
+                style: GoogleFonts.notoSans(fontSize: 14),
               ),
-              onTap: () {
-                // Detaylar sayfasına yönlendirme (gerekirse)
-              },
             ),
           );
         },
