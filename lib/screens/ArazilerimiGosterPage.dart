@@ -56,6 +56,37 @@ class _ArazilerimiGosterPageState extends State<ArazilerimiGosterPage> {
     }
   }
 
+  Future<void> _deleteLand(int landId) async {
+    try {
+      final response = await http.delete(
+        Uri.parse('http://10.0.2.2:8080/lands/$landId'),
+        headers: {'Content-Type': 'application/json'},
+      );
+
+      if (response.statusCode == 200 || response.statusCode == 204) {
+        setState(() {
+          lands.removeWhere((land) => land['id'] == landId);
+        });
+        _showSnackbar('Arazi başarıyla silindi.', Colors.green);
+      } else {
+        _showSnackbar(
+            'Arazi silinemedi. Durum Kodu: ${response.statusCode}', Colors.red);
+      }
+    } catch (e) {
+      _showSnackbar('Silme sırasında hata oluştu: $e', Colors.red);
+    }
+  }
+
+  void _updateLand(int landId) {
+    // Güncelleme işlemi için bir sayfaya yönlendirme (isteğe bağlı)
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => UpdateLandPage(landId: landId),
+      ),
+    );
+  }
+
   void _showSnackbar(String message, Color color) {
     final snackBar = SnackBar(
       content: Text(message),
@@ -104,13 +135,43 @@ class _ArazilerimiGosterPageState extends State<ArazilerimiGosterPage> {
                 '${land['city'] ?? 'Bilinmeyen Şehir'} - ${land['district'] ?? 'Bilinmeyen İlçe'}',
                 style: GoogleFonts.notoSans(fontSize: 14),
               ),
-              trailing: Text(
-                '${land['landSize'] ?? 0} hektar',
-                style: GoogleFonts.notoSans(fontSize: 14),
+              trailing: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.edit, color: Colors.blue),
+                    onPressed: () => _updateLand(land['id']),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.delete, color: Colors.red),
+                    onPressed: () => _deleteLand(land['id']),
+                  ),
+                ],
               ),
             ),
           );
         },
+      ),
+    );
+  }
+}
+
+class UpdateLandPage extends StatelessWidget {
+  final int landId;
+
+  const UpdateLandPage({Key? key, required this.landId}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('Arazi Güncelle', style: GoogleFonts.notoSans()),
+      ),
+      body: Center(
+        child: Text(
+          'Arazi ID: $landId için güncelleme sayfası.',
+          style: GoogleFonts.notoSans(fontSize: 18),
+        ),
       ),
     );
   }
