@@ -12,11 +12,14 @@ class AraziEklePage extends StatefulWidget {
 }
 
 class _AraziEklePageState extends State<AraziEklePage> {
+  final _formKey = GlobalKey<FormState>();
   final TextEditingController _landNameController = TextEditingController();
   final TextEditingController _landSizeController = TextEditingController();
+
   String? selectedIl;
   String? selectedIlce;
   String? selectedKoy;
+
   List<String> iller = [];
   List<String> ilceler = [];
   List<String> koyler = [];
@@ -27,33 +30,28 @@ class _AraziEklePageState extends State<AraziEklePage> {
     _loadSehirler();
   }
 
-  // Şehir verilerini yükleme
   Future<void> _loadSehirler() async {
-    final String response = await rootBundle.loadString('assets/Data/sehirler.json');
-    final List<dynamic> data = json.decode(response);
+    final response = await _loadJsonData('assets/Data/sehirler.json');
     setState(() {
-      iller = data.map((item) => item['sehir_adi'] as String).toList();
+      iller = response.map((item) => item['sehir_adi'] as String).toList();
     });
   }
 
-  // İlçe verilerini yükleme
   Future<void> _loadIlceler() async {
     if (selectedIl == null) return;
 
-    final String response = await rootBundle.loadString('assets/Data/ilceler.json');
-    final List<dynamic> data = json.decode(response);
+    final response = await _loadJsonData('assets/Data/ilceler.json');
     setState(() {
-      ilceler = data
-          .where((item) => item['sehir_adi'] == selectedIl)  // Şehir adına göre filtreleme
+      ilceler = response
+          .where((item) => item['sehir_adi'] == selectedIl)
           .map((item) => item['ilce_adi'] as String)
           .toList();
-      selectedIlce = null;  // Seçili ilçeyi sıfırla
+      selectedIlce = null;
       koyler = [];
       selectedKoy = null;
     });
   }
 
-  // Köy/Mahalle verilerini yükleme
   Future<void> _loadKoyler() async {
     if (selectedIlce == null) return;
 
@@ -66,15 +64,15 @@ class _AraziEklePageState extends State<AraziEklePage> {
 
     List<String> allKoyler = [];
     for (var file in koyFiles) {
-      final String response = await rootBundle.loadString(file);
-      final List<dynamic> data = json.decode(response);
-      final filteredKoyler = data
-          .where((item) => item['sehir_adi'] == selectedIl && item['ilce_adi'] == selectedIlce)  // İl ve ilçe filtresi
-          .map((item) => item['mahalle_adi'] as String?)
-          .where((koy) => koy != null)
-          .cast<String>()
-          .toList();
-      allKoyler.addAll(filteredKoyler);
+      final response = await _loadJsonData(file);
+      allKoyler.addAll(
+        response
+            .where((item) =>
+        item['sehir_adi'] == selectedIl &&
+            item['ilce_adi'] == selectedIlce)
+            .map((item) => item['mahalle_adi'] as String)
+            .toList(),
+      );
     }
 
     setState(() {
@@ -83,18 +81,16 @@ class _AraziEklePageState extends State<AraziEklePage> {
     });
   }
 
-  // Arazi ekleme işlemi
+  Future<List<dynamic>> _loadJsonData(String path) async {
+    final String response = await rootBundle.loadString(path);
+    return json.decode(response) as List<dynamic>;
+  }
+
   Future<void> _addLand() async {
+    if (!_formKey.currentState!.validate()) return;
+
     final prefs = await SharedPreferences.getInstance();
     final userId = prefs.getInt('userId');
-
-    if (_landNameController.text.isEmpty ||
-        _landSizeController.text.isEmpty ||
-        selectedIl == null ||
-        selectedIlce == null) {
-      _showSnackbar('Lütfen tüm alanları doldurun.', Colors.red);
-      return;
-    }
 
     final newLand = {
       'name': _landNameController.text,
@@ -102,7 +98,7 @@ class _AraziEklePageState extends State<AraziEklePage> {
       'city': selectedIl,
       'district': selectedIlce,
       'village': selectedKoy,
-      'userId': userId
+      'userId': userId,
     };
 
     try {
@@ -111,29 +107,70 @@ class _AraziEklePageState extends State<AraziEklePage> {
         headers: {'Content-Type': 'application/json'},
         body: json.encode(newLand),
       );
-      print('Response status: ${response.statusCode}');
-      print('Response body: ${response.body}');
 
-      if (response.statusCode == 200) {
+      if (response.statusCode == 201) {
         _showSnackbar('Arazi başarıyla kaydedildi!', Colors.green);
-        Navigator.pushNamed(context, '/land-list');
+        Navigator.pushNamed(context, '/ArazilerimiGosterPage');
       } else {
-        _showSnackbar('Arazi kaydedilemedi. Durum Kodu: ${response.statusCode}', Colors.red);
+        _showSnackbar(
+            'Arazi kaydedilmedi. Durum Kodu: ${response.statusCode}', Colors.red);
       }
     } catch (e) {
       _showSnackbar('Hata: $e', Colors.red);
     }
-
   }
 
-  // Snackbar mesajı gösterme
   void _showSnackbar(String message, Color color) {
     final snackBar = SnackBar(
       content: Text(message),
       backgroundColor: color,
-      duration: Duration(seconds: 3),
+      duration: const Duration(seconds: 3),
     );
     ScaffoldMessenger.of(context).showSnackBar(snackBar);
+  }
+
+  Widget _buildDropdownField({
+    required String hint,
+    required List<String> items,
+    String? value,
+    required ValueChanged<String?> onChanged,
+  }) {
+    return DropdownButtonFormField<String>(
+      value: value,
+      hint: Text(hint),
+      items: items.map((item) => DropdownMenuItem(value: item, child: Text(item))).toList(),
+      onChanged: onChanged,
+      decoration: InputDecoration(
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+        filled: true,
+        fillColor: Colors.white,
+      ),
+    );
+  }
+
+  Widget _buildTextField({
+    required TextEditingController controller,
+    required String label,
+    required IconData icon,
+    TextInputType inputType = TextInputType.text,
+  }) {
+    return TextFormField(
+      controller: controller,
+      decoration: InputDecoration(
+        labelText: label,
+        prefixIcon: Icon(icon),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+        filled: true,
+        fillColor: Colors.white,
+      ),
+      keyboardType: inputType,
+      validator: (value) {
+        if (value == null || value.isEmpty) {
+          return 'Bu alan boş bırakılamaz.';
+        }
+        return null;
+      },
+    );
   }
 
   @override
@@ -141,59 +178,90 @@ class _AraziEklePageState extends State<AraziEklePage> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Arazi Ekle'),
+        backgroundColor: const Color(0xFF228B22),
+        centerTitle: true,
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          children: [
-            TextField(
-              controller: _landNameController,
-              decoration: InputDecoration(labelText: 'Arazi Adı'),
+      body: Stack(
+        children: [
+          Container(
+            decoration: const BoxDecoration(
+              image: DecorationImage(
+                image: AssetImage('assets/images/arazi-ekle.jpg'),
+                fit: BoxFit.cover,
+                colorFilter: ColorFilter.mode(Colors.black54, BlendMode.darken),
+              ),
             ),
-            TextField(
-              controller: _landSizeController,
-              decoration: InputDecoration(labelText: 'Arazi Büyüklüğü (hektar)'),
-              keyboardType: TextInputType.number,
+          ),
+          Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Form(
+              key: _formKey,
+              child: SingleChildScrollView(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    const Icon(Icons.terrain, size: 80, color: Colors.white),
+                    const SizedBox(height: 10),
+                    _buildTextField(
+                      controller: _landNameController,
+                      label: 'Arazi Adı',
+                      icon: Icons.landscape,
+                    ),
+                    const SizedBox(height: 10),
+                    _buildTextField(
+                      controller: _landSizeController,
+                      label: 'Arazi Büyüklüğü (hektar)',
+                      icon: Icons.area_chart,
+                      inputType: TextInputType.number,
+                    ),
+                    const SizedBox(height: 10),
+                    _buildDropdownField(
+                      hint: 'İl Seçin',
+                      items: iller,
+                      value: selectedIl,
+                      onChanged: (value) {
+                        setState(() => selectedIl = value);
+                        _loadIlceler();
+                      },
+                    ),
+                    const SizedBox(height: 10),
+                    _buildDropdownField(
+                      hint: 'İlçe Seçin',
+                      items: ilceler,
+                      value: selectedIlce,
+                      onChanged: (value) {
+                        setState(() => selectedIlce = value);
+                        _loadKoyler();
+                      },
+                    ),
+                    const SizedBox(height: 10),
+                    _buildDropdownField(
+                      hint: 'Köy/Mahalle Seçin',
+                      items: koyler,
+                      value: selectedKoy,
+                      onChanged: (value) {
+                        setState(() => selectedKoy = value);
+                      },
+                    ),
+                    const SizedBox(height: 20),
+                    ElevatedButton(
+                      onPressed: _addLand,
+                      style: ElevatedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 15),
+                        backgroundColor: const Color(0xFF228B22),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                      ),
+                      child: const Text('Arazi Ekle',
+                          style: TextStyle(fontSize: 18, color: Colors.white)),
+                    ),
+                  ],
+                ),
+              ),
             ),
-            DropdownButtonFormField<String>(
-              value: selectedIl,
-              hint: Text('İl Seçin'),
-              items: iller.map((il) => DropdownMenuItem(value: il, child: Text(il))).toList(),
-              onChanged: (value) {
-                setState(() {
-                  selectedIl = value;
-                });
-                _loadIlceler();  // İl seçildiğinde ilçeleri yükle
-              },
-            ),
-            DropdownButtonFormField<String>(
-              value: selectedIlce,
-              hint: Text('İlçe Seçin'),
-              items: ilceler.map((ilce) => DropdownMenuItem(value: ilce, child: Text(ilce))).toList(),
-              onChanged: (value) {
-                setState(() {
-                  selectedIlce = value;
-                });
-                _loadKoyler();  // İlçe seçildiğinde mahalleleri yükle
-              },
-            ),
-            DropdownButtonFormField<String>(
-              value: selectedKoy,
-              hint: Text('Köy/Mahalle Seçin'),
-              items: koyler.map((koy) => DropdownMenuItem(value: koy, child: Text(koy))).toList(),
-              onChanged: (value) {
-                setState(() {
-                  selectedKoy = value;
-                });
-              },
-            ),
-            SizedBox(height: 16),
-            ElevatedButton(
-              onPressed: _addLand,
-              child: Text('Arazi Ekle'),
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

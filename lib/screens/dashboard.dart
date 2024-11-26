@@ -10,10 +10,12 @@ import 'DegerlendirmelerimiListelePage.dart';
 class Dashboard extends StatelessWidget {
   const Dashboard({Key? key}) : super(key: key);
 
-  Card makeDashboardItem(BuildContext context, String title, IconData icon, Widget page) {
+  Card makeDashboardItem(
+      BuildContext context, String title, IconData icon, Widget page) {
     return Card(
-      elevation: 2,
+      elevation: 6,
       margin: const EdgeInsets.all(8),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
       child: InkWell(
         onTap: () {
           Navigator.push(
@@ -23,27 +25,26 @@ class Dashboard extends StatelessWidget {
         },
         child: Container(
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(5),
+            borderRadius: BorderRadius.circular(15),
             gradient: const LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
               colors: [
-                Color(0xFF004B8D),
-                Color(0xFFffffff),
+                Color(0xFF87CEEB), // Gökyüzü mavisi
+                Color(0xFF228B22), // Doğal yeşil
               ],
             ),
             boxShadow: const [
               BoxShadow(
-                color: Colors.grey,
-                blurRadius: 3,
-                offset: Offset(2, 2),
-              )
+                color: Colors.black26,
+                blurRadius: 5,
+                offset: Offset(3, 3),
+              ),
             ],
           ),
           child: Column(
-            mainAxisSize: MainAxisSize.min,
+            mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const SizedBox(height: 20),
               Icon(
                 icon,
                 size: 50,
@@ -52,13 +53,13 @@ class Dashboard extends StatelessWidget {
               const SizedBox(height: 10),
               Text(
                 title,
-                style: const TextStyle(
+                textAlign: TextAlign.center,
+                style: GoogleFonts.roboto(
                   fontSize: 18,
                   color: Colors.white,
                   fontWeight: FontWeight.bold,
                 ),
               ),
-              const SizedBox(height: 10),
             ],
           ),
         ),
@@ -71,32 +72,67 @@ class Dashboard extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          'Dashboard',
-          style: GoogleFonts.roboto(),
+          'Tarım Dashboard',
+          style: GoogleFonts.pacifico(fontSize: 24, fontWeight: FontWeight.w600),
         ),
-        backgroundColor: const Color.fromRGBO(233, 65, 82, 1),
+        backgroundColor: const Color.fromRGBO(34, 139, 34, 1), // Doğal yeşil
+        elevation: 4,
+        centerTitle: true,
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          children: [
-            const SizedBox(height: 20),
-            Expanded(
-              child: GridView.count(
-                crossAxisCount: 2,
-                padding: const EdgeInsets.all(2),
-                children: [
-                  makeDashboardItem(context,"Arazi Ekle", Icons.add, AraziEklePage()),
-                  makeDashboardItem(context,"Arazilerimi Göster", Icons.list, ArazilerimiGosterPage()),
-                  makeDashboardItem(context,"Ekim Yap", Icons.agriculture, EkimYapPage()),
-                  makeDashboardItem(context,"Ekimlerimi Göster", Icons.replay, EkimlerimiGosterPage()),
-                  makeDashboardItem(context,"Hasatlarımı Göster", Icons.grass, HasatlarimiGosterPage()),
-                  makeDashboardItem(context,"Değerlendirmelerimi Listele", Icons.list_alt, DegerlendirmelerimiListelePage()),
-                ],
+      body: Stack(
+        children: [
+          // Arka plan
+          Container(
+            decoration: const BoxDecoration(
+              image: DecorationImage(
+                image: AssetImage('assets/images/farm_dashboard_background.jpg'),
+                fit: BoxFit.cover,
+                colorFilter: ColorFilter.mode(
+                  Colors.black54,
+                  BlendMode.darken,
+                ),
               ),
             ),
-          ],
-        ),
+          ),
+          // Dashboard içeriği
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 20),
+            child: Column(
+              children: [
+                Text(
+                  "Merhaba! Tarım dünyasına hoş geldiniz.",
+                  style: GoogleFonts.roboto(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 20),
+                Expanded(
+                  child: GridView.count(
+                    crossAxisCount: 2,
+                    crossAxisSpacing: 10,
+                    mainAxisSpacing: 10,
+                    children: [
+                      makeDashboardItem(
+                          context, "Arazi Ekle", Icons.add_location_alt, AraziEklePage()),
+                      makeDashboardItem(
+                          context, "Arazilerimi Göster", Icons.map, ArazilerimiGosterPage()),
+                      makeDashboardItem(context, "Ekim Yap", Icons.agriculture, EkimYapPage()),
+                      makeDashboardItem(context, "Ekimlerimi Göster", Icons.timeline,
+                          EkimlerimiGosterPage()),
+                      makeDashboardItem(context, "Hasatlarımı Göster", Icons.grass,
+                          HasatlarimiGosterPage()),
+                      makeDashboardItem(context, "Değerlendirmelerimi Listele", Icons.list_alt,
+                          DegerlendirmelerimiListelePage()),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }

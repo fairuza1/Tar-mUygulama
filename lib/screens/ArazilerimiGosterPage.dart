@@ -58,13 +58,15 @@ class _ArazilerimiGosterPageState extends State<ArazilerimiGosterPage> {
 
   Future<void> _deleteLand(int landId) async {
     try {
+      // Backend API'sine id ile DELETE isteği gönderiyoruz
       final response = await http.delete(
-        Uri.parse('http://10.0.2.2:8080/lands/$landId'),
+        Uri.parse('http://10.0.2.2:8080/lands/$landId'),  // landId'yi URL'ye ekliyoruz
         headers: {'Content-Type': 'application/json'},
       );
 
       if (response.statusCode == 200 || response.statusCode == 204) {
         setState(() {
+          // Silinen araziyi listeden çıkarıyoruz
           lands.removeWhere((land) => land['id'] == landId);
         });
         _showSnackbar('Arazi başarıyla silindi.', Colors.green);
@@ -76,6 +78,7 @@ class _ArazilerimiGosterPageState extends State<ArazilerimiGosterPage> {
       _showSnackbar('Silme sırasında hata oluştu: $e', Colors.red);
     }
   }
+
 
   void _updateLand(int landId) {
     // Güncelleme işlemi için bir sayfaya yönlendirme (isteğe bağlı)
@@ -100,7 +103,9 @@ class _ArazilerimiGosterPageState extends State<ArazilerimiGosterPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        backgroundColor: Colors.green,
         title: Text('Arazilerim', style: GoogleFonts.notoSans()),
+        centerTitle: true,
       ),
       body: isLoading
           ? const Center(child: CircularProgressIndicator())
@@ -109,7 +114,7 @@ class _ArazilerimiGosterPageState extends State<ArazilerimiGosterPage> {
         child: Text(
           'Hiçbir arazi bulunamadı.',
           style: GoogleFonts.notoSans(
-            fontSize: 16,
+            fontSize: 18,
             color: Colors.grey,
           ),
         ),
@@ -123,12 +128,18 @@ class _ArazilerimiGosterPageState extends State<ArazilerimiGosterPage> {
               vertical: 8.0,
               horizontal: 16.0,
             ),
+            elevation: 5,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(15),
+            ),
             child: ListTile(
+              contentPadding: const EdgeInsets.all(16),
               title: Text(
                 land['name'] ?? 'Bilinmeyen Arazi',
                 style: GoogleFonts.notoSans(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
+                  color: Colors.black,
                 ),
               ),
               subtitle: Text(
@@ -165,7 +176,9 @@ class UpdateLandPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        backgroundColor: Colors.green,
         title: Text('Arazi Güncelle', style: GoogleFonts.notoSans()),
+        centerTitle: true,
       ),
       body: Center(
         child: Text(

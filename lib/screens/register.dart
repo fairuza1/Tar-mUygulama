@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
@@ -13,19 +14,61 @@ class Register extends StatefulWidget {
 
 class _RegisterState extends State<Register> {
   final _formKey = GlobalKey<FormState>();
-  User user = User("", ""); // User nesnesi
-  String url = "http://10.0.2.2:8080/users/register";
+  User user = User("", "");
+  String url = "http://10.0.2.2:8080/users/register"; // Yerel sunucu adresi
 
+  /// Kullanıcı kaydını backend'e gönderir ve sonucu işleyerek ekrana mesaj gösterir.
   Future<void> save() async {
-    var res = await http.post(
-      Uri.parse(url),
-      headers: {'Content-Type': 'application/json'},
-      body: json.encode({'email': user.email, 'password': user.password}),
-    );
-    print(res.body);
-    if (res.body.isNotEmpty) {
-      Navigator.pop(context); // Başarılıysa geri dön
+    try {
+      var res = await http.post(
+        Uri.parse(url),
+        headers: {'Content-Type': 'application/json'},
+        body: json.encode({'email': user.email, 'password': user.password}),
+      );
+
+      print("Status Code: ${res.statusCode}");
+      print("Response Body: ${res.body}");
+
+      if (res.statusCode == 201) {
+        // Kayıt başarılı
+        _showSnackbar("Kayıt başarıyla tamamlandı!", Colors.green);
+        Navigator.pop(context);
+      } else if (res.statusCode == 400) {
+        // Hata durumu: Backend'den dönen hata mesajı işleniyor
+        var errorResponse = json.decode(res.body);
+        if (errorResponse['error'] != null) {
+          _showSnackbar(errorResponse['error'], Colors.red);
+        } else {
+          _showSnackbar("Bir hata oluştu. Lütfen tekrar deneyin.", Colors.red);
+        }
+      } else {
+        // Beklenmeyen hata
+        _showSnackbar("Bir hata oluştu. Lütfen tekrar deneyin.", Colors.red);
+      }
+    } catch (e) {
+      print("Hata oluştu: $e");
+
+      if (e is SocketException) {
+        print("SocketException: Sunucuya ulaşılamıyor.");
+      } else if (e is FormatException) {
+        print("FormatException: Beklenmeyen cevap formatı.");
+      } else {
+        print("Bilinmeyen bir hata: $e");
+      }
+
+      _showSnackbar("Sunucuyla iletişim kurulamadı. Lütfen tekrar deneyin.", Colors.red);
     }
+
+  }
+
+  /// Snackbar ile mesaj gösterir.
+  void _showSnackbar(String message, Color color) {
+    final snackBar = SnackBar(
+      content: Text(message),
+      backgroundColor: color,
+      duration: const Duration(seconds: 3),
+    );
+    ScaffoldMessenger.of(context).showSnackBar(snackBar);
   }
 
   @override
@@ -40,7 +83,7 @@ class _RegisterState extends State<Register> {
               width: MediaQuery.of(context).size.width,
               decoration: BoxDecoration(
                 image: DecorationImage(
-                  image: AssetImage('assets/images/farm_background.jpg'), // Tarım konseptli bir görsel
+                  image: AssetImage('assets/images/farm_background.jpg'),
                   fit: BoxFit.cover,
                   colorFilter: ColorFilter.mode(
                     Colors.black.withOpacity(0.3),
@@ -150,8 +193,8 @@ class _RegisterState extends State<Register> {
         text,
         style: GoogleFonts.roboto(
           fontSize: 20,
-          fontWeight: FontWeight.w500,
-          color: Colors.white70,
+          fontWeight: FontWeight.bold,
+          color: Colors.white,
         ),
       ),
     );
@@ -163,19 +206,21 @@ class _RegisterState extends State<Register> {
     bool obscureText = false,
   }) {
     return TextFormField(
-      onChanged: onChanged,
-      validator: validator,
       obscureText: obscureText,
       style: const TextStyle(fontSize: 18, color: Colors.white),
       decoration: InputDecoration(
         filled: true,
-        fillColor: Colors.white.withOpacity(0.2),
+        fillColor: Colors.white30,
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(15),
-          borderSide: BorderSide.none,
+          borderRadius: BorderRadius.circular(10),
         ),
-        errorStyle: const TextStyle(fontSize: 16, color: Colors.redAccent),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(10),
+          borderSide: const BorderSide(color: Colors.green, width: 2),
+        ),
       ),
+      onChanged: onChanged,
+      validator: validator,
     );
   }
 }

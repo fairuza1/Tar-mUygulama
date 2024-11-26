@@ -41,10 +41,13 @@ class _LoginState extends State<Login> {
           ),
         );
       } else {
-        _showSnackbar('Giriş başarısız', Colors.red);
+        // Backend'den gelen hata mesajını al
+        var responseData = json.decode(res.body);
+        String errorMessage = responseData['message'] ?? 'Giriş başarısız';
+        _showSnackbar(errorMessage, Colors.red);
       }
     } catch (e) {
-      _showSnackbar('Veri işlenirken bir hata oluştu', Colors.red);
+      _showSnackbar('kullanıcı adı veya şifre yanlış:', Colors.red);
     }
   }
 
