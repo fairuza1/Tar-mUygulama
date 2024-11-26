@@ -85,7 +85,7 @@ class Dashboard extends StatelessWidget {
           Container(
             decoration: const BoxDecoration(
               image: DecorationImage(
-                image: AssetImage('assets/images/farm_dashboard_background.jpg'),
+                image: AssetImage('assets/images/dashbord.jpg'),
                 fit: BoxFit.cover,
                 colorFilter: ColorFilter.mode(
                   Colors.black54,
