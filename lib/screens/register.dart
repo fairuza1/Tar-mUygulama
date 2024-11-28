@@ -56,7 +56,7 @@ class _RegisterState extends State<Register> {
         print("Bilinmeyen bir hata: $e");
       }
 
-      _showSnackbar("Sunucuyla iletişim kurulamadı. Lütfen tekrar deneyin.", Colors.red);
+      _showSnackbar("kullanıcı zaten mevcut lütfen farklı bir e posta deneyin.", Colors.red);
     }
 
   }
