@@ -25,7 +25,8 @@ class _LoginState extends State<Login> {
       headers: {'Content-Type': 'application/json'},
       body: json.encode({'email': user.email, 'password': user.password}),
     );
-
+    print("Status Code: ${res.statusCode}");
+    print("Response Body: ${res.body}");
     try {
       if (res.statusCode == 200 && res.body.isNotEmpty) {
         var responseData = json.decode(res.body);

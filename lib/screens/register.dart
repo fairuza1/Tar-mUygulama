@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
@@ -34,37 +33,32 @@ class _RegisterState extends State<Register> {
         _showSnackbar("Kayıt başarıyla tamamlandı!", Colors.green);
         Navigator.pop(context);
       } else if (res.statusCode == 400) {
-        // Hata durumu: Backend'den dönen hata mesajı işleniyor
-        var errorResponse = json.decode(res.body);
-        if (errorResponse['error'] != null) {
-          _showSnackbar(errorResponse['error'], Colors.red);
-        } else {
-          _showSnackbar("Bir hata oluştu. Lütfen tekrar deneyin.", Colors.red);
-        }
+        // Eğer yanıt düz metinse, JSON çözmeden doğrudan yazdırın
+        String errorMessage = res.body; // Burada doğrudan body'yi alıyoruz
+        print("Error Message: $errorMessage");
+        _showSnackbar(errorMessage, Colors.red);
+      } else if (res.statusCode == 409) {
+        // E-posta zaten kayıtlı ise
+        _showSnackbar("Bu e-posta adresi zaten kayıtlı.", Colors.red);
       } else {
         // Beklenmeyen hata
+        print("Beklenmeyen hata: ${res.statusCode}");
         _showSnackbar("Bir hata oluştu. Lütfen tekrar deneyin.", Colors.red);
       }
     } catch (e) {
-      print("Hata oluştu: $e");
-
-      if (e is SocketException) {
-        print("SocketException: Sunucuya ulaşılamıyor.");
-      } else if (e is FormatException) {
-        print("FormatException: Beklenmeyen cevap formatı.");
-      } else {
-        print("Bilinmeyen bir hata: $e");
-      }
-
-      _showSnackbar("kullanıcı zaten mevcut lütfen farklı bir e posta deneyin.", Colors.red);
+      print("Error: $e");
+      _showSnackbar("Sunucuya ulaşılamıyor. Lütfen bağlantınızı kontrol edin.", Colors.red);
     }
-
   }
+
 
   /// Snackbar ile mesaj gösterir.
   void _showSnackbar(String message, Color color) {
     final snackBar = SnackBar(
-      content: Text(message),
+      content: Text(
+        message,
+        style: GoogleFonts.roboto(color: Colors.white),
+      ),
       backgroundColor: color,
       duration: const Duration(seconds: 3),
     );
@@ -83,15 +77,16 @@ class _RegisterState extends State<Register> {
               width: MediaQuery.of(context).size.width,
               decoration: BoxDecoration(
                 image: DecorationImage(
-                  image: AssetImage('assets/images/farm_background.jpg'),
+                  image: const AssetImage('assets/images/farm_background.jpg'),
                   fit: BoxFit.cover,
                   colorFilter: ColorFilter.mode(
-                    Colors.black.withOpacity(0.3),
+                    Color(0xFF000000).withOpacity(0.3),  // Düzeltilmiş satır
                     BlendMode.darken,
                   ),
                 ),
               ),
             ),
+
             // Form içeriği
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16.0),
@@ -119,6 +114,9 @@ class _RegisterState extends State<Register> {
                             if (value == null || value.isEmpty) {
                               return 'Lütfen e-posta adresinizi giriniz.';
                             }
+                            if (!RegExp(r"^[\w-.]+@([\w-]+\.)+[\w-]{2,4}$").hasMatch(value)) {
+                              return 'Geçerli bir e-posta adresi giriniz.';
+                            }
                             return null;
                           },
                         ),
@@ -131,6 +129,10 @@ class _RegisterState extends State<Register> {
                             if (value == null || value.isEmpty) {
                               return 'Lütfen bir şifre giriniz.';
                             }
+                            if (value.length < 6) {
+                              return 'Şifreniz en az 6 karakter olmalıdır.';
+                            }
+
                             return null;
                           },
                         ),
