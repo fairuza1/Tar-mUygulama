@@ -27,10 +27,13 @@ class _LoginState extends State<Login> {
     );
     print("Status Code: ${res.statusCode}");
     print("Response Body: ${res.body}");
+
     try {
       if (res.statusCode == 200 && res.body.isNotEmpty) {
         var responseData = json.decode(res.body);
         int userId = responseData['id'];
+
+        print("User ID: $userId");
 
         final prefs = await SharedPreferences.getInstance();
         await prefs.setInt('userId', userId);
