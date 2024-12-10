@@ -119,7 +119,8 @@ class _EkimYapPageState extends State<EkimYapPage> {
     if (_plantingAmountController.text.isEmpty ||
         _selectedDate == null ||
         _selectedLandId == null ||
-        _selectedPlantId == null) {
+        _selectedPlantId == null ||
+        _selectedCategoryId == null) {  // Kategori ID'si boş olmamalı
       _showSnackbar('Tüm alanları doldurmanız gerekmektedir.', Colors.red);
       return;
     }
@@ -130,6 +131,8 @@ class _EkimYapPageState extends State<EkimYapPage> {
       "plantId": _selectedPlantId,
       "plantingAmount": int.parse(_plantingAmountController.text),
       "sowingDate": _selectedDate?.toIso8601String(),
+      "categoryId": _selectedCategoryId,  // Kategori ID'si ekleniyor
+      "categoryName": categories.firstWhere((category) => category['id'] == _selectedCategoryId)['categoryName'],  // Kategori adı ekleniyor
     });
 
     try {
