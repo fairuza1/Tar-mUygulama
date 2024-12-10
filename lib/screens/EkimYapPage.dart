@@ -21,12 +21,22 @@ class _EkimYapPageState extends State<EkimYapPage> {
   int? _selectedLandId;
   int? _selectedCategoryId;
   int? _selectedPlantId;
+  int? userId;  // Kullanıcı ID'sini tutacak değişken
 
   @override
   void initState() {
     super.initState();
+    _fetchUserId();  // Kullanıcı ID'sini al
     _fetchLands();
     _fetchCategories();
+  }
+
+  // Kullanıcı ID'sini SharedPreferences'den al
+  Future<void> _fetchUserId() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      userId = prefs.getInt('userId');
+    });
   }
 
   @override
@@ -120,7 +130,9 @@ class _EkimYapPageState extends State<EkimYapPage> {
         _selectedDate == null ||
         _selectedLandId == null ||
         _selectedPlantId == null ||
-        _selectedCategoryId == null) {  // Kategori ID'si boş olmamalı
+         userId==null)
+    {  // Kategori ID'si boş olmamalı
+
       _showSnackbar('Tüm alanları doldurmanız gerekmektedir.', Colors.red);
       return;
     }
@@ -133,8 +145,9 @@ class _EkimYapPageState extends State<EkimYapPage> {
       "sowingDate": _selectedDate?.toIso8601String(),
       "categoryId": _selectedCategoryId,  // Kategori ID'si ekleniyor
       "categoryName": categories.firstWhere((category) => category['id'] == _selectedCategoryId)['categoryName'],  // Kategori adı ekleniyor
+      "userId":userId,
     });
-
+    print("User ID: $userId");
     try {
       final response = await http.post(
         url,
