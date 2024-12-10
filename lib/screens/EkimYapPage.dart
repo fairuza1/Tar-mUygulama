@@ -116,7 +116,10 @@ class _EkimYapPageState extends State<EkimYapPage> {
   }
 
   Future<void> _submitSowing() async {
-    if (_plantingAmountController.text.isEmpty || _selectedDate == null || _selectedLandId == null || _selectedPlantId == null) {
+    if (_plantingAmountController.text.isEmpty ||
+        _selectedDate == null ||
+        _selectedLandId == null ||
+        _selectedPlantId == null) {
       _showSnackbar('Tüm alanları doldurmanız gerekmektedir.', Colors.red);
       return;
     }
@@ -148,7 +151,7 @@ class _EkimYapPageState extends State<EkimYapPage> {
 
   void _showSnackbar(String message, Color color) {
     final snackBar = SnackBar(
-      content: Text(message, style: GoogleFonts.notoSans()),
+      content: Text(message),
       backgroundColor: color,
       duration: const Duration(seconds: 3),
     );
@@ -170,137 +173,122 @@ class _EkimYapPageState extends State<EkimYapPage> {
     }
   }
 
-  void _openSowingDialog(int landId) {
-    setState(() {
-      _selectedLandId = landId;
-    });
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('Ekim Yap'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              DropdownButtonFormField<int>(
-                decoration: const InputDecoration(
-                  labelText: 'Kategori Seç',
-                  border: OutlineInputBorder(),
-                ),
-                items: categories.map<DropdownMenuItem<int>>((category) {
-                  return DropdownMenuItem<int>(
-                    value: category['id'],
-                    child: Text(category['categoryName'] ?? 'Bilinmeyen Kategori'),
-                  );
-                }).toList(),
-                onChanged: (value) {
-                  setState(() {
-                    _selectedCategoryId = value;
-                    _selectedPlantId = null; // Yeni seçimle önceki bitkiyi sıfırla
-                    plants = []; // Bitki listesini temizle
-                  });
-                  if (value != null) {
-                    _fetchPlantsByCategory(value); // Kategorilere göre bitki çek
-                  }
-                },
-                value: _selectedCategoryId,
-              ),
-              const SizedBox(height: 16),
-              DropdownButtonFormField<int>(
-                decoration: const InputDecoration(
-                  labelText: 'Bitki Seç',
-                  border: OutlineInputBorder(),
-                ),
-                items: plants.map<DropdownMenuItem<int>>((plant) {
-                  return DropdownMenuItem<int>(
-                    value: plant['id'],
-                    child: Text(plant['name'] ?? 'Bilinmeyen Bitki'),
-                  );
-                }).toList(),
-                onChanged: (value) {
-                  setState(() {
-                    _selectedPlantId = value;
-                  });
-                },
-                value: _selectedPlantId,
-                hint: const Text('Önce bir kategori seçin'),
-              ),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: _plantingAmountController,
-                decoration: const InputDecoration(
-                  labelText: 'Ekim Miktarı',
-                  border: OutlineInputBorder(),
-                ),
-                keyboardType: TextInputType.number,
-              ),
-              const SizedBox(height: 16),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    _selectedDate == null
-                        ? 'Tarih Seçilmedi'
-                        : 'Seçilen Tarih: ${_selectedDate!.toLocal()}'.split(' ')[0],
-                  ),
-                  ElevatedButton(
-                    onPressed: () => _pickDate(context),
-                    child: const Text('Tarih Seç'),
-                  ),
-                ],
-              ),
-            ],
-          ),
-          actions: <Widget>[
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-              child: const Text('İptal'),
-            ),
-            TextButton(
-              onPressed: () {
-                _submitSowing();
-                Navigator.of(context).pop();
-              },
-              child: const Text('Ekim Yap'),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(
-          'Arazilerim',
-          style: GoogleFonts.notoSans(),
-        ),
+        backgroundColor: Colors.green,
+        title: Text('Ekim Yap', style: GoogleFonts.notoSans()),
+        centerTitle: true,
       ),
       body: isLoading
           ? const Center(child: CircularProgressIndicator())
-          : ListView.builder(
-        itemCount: lands.length,
-        itemBuilder: (context, index) {
-          final land = lands[index];
-          return Card(
-            margin: const EdgeInsets.all(8.0),
-            child: ListTile(
-              title: Text(
-                land['name'] ?? 'Bilinmeyen Arazi',
-                style: GoogleFonts.notoSans(),
+          : lands.isEmpty
+          ? Center(
+        child: Text(
+          'Hiçbir arazi bulunamadı.',
+          style: GoogleFonts.notoSans(fontSize: 18, color: Colors.grey),
+        ),
+      )
+          : Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            DropdownButtonFormField<int>(
+              decoration: const InputDecoration(
+                labelText: 'Arazi Seç',
+                border: OutlineInputBorder(),
               ),
-              subtitle: Text(
-                'Ekin Durumu: ${land['status']}',
-                style: GoogleFonts.notoSans(),
-              ),
-              onTap: () => _openSowingDialog(land['id']),
+              value: _selectedLandId,
+              items: lands.map<DropdownMenuItem<int>>((land) {
+                return DropdownMenuItem<int>(
+                  value: land['id'],
+                  child: Text(land['name'] ?? 'Bilinmeyen Arazi'),
+                );
+              }).toList(),
+              onChanged: (value) {
+                setState(() {
+                  _selectedLandId = value;
+                });
+              },
             ),
-          );
-        },
+            const SizedBox(height: 16),
+            DropdownButtonFormField<int>(
+              decoration: const InputDecoration(
+                labelText: 'Kategori Seç',
+                border: OutlineInputBorder(),
+              ),
+              value: _selectedCategoryId,
+              items: categories.map<DropdownMenuItem<int>>((category) {
+                return DropdownMenuItem<int>(
+                  value: category['id'],
+                  child: Text(category['categoryName']),
+                );
+              }).toList(),
+              onChanged: (value) {
+                setState(() {
+                  _selectedCategoryId = value;
+                  _selectedPlantId = null; // Bitki seçimini sıfırla
+                  plants.clear(); // Bitki listesini temizle
+                });
+                if (value != null) {
+                  _fetchPlantsByCategory(value);
+                }
+              },
+            ),
+            const SizedBox(height: 16),
+            DropdownButtonFormField<int>(
+              decoration: const InputDecoration(
+                labelText: 'Bitki Seç',
+                border: OutlineInputBorder(),
+              ),
+              value: _selectedPlantId,
+              items: plants.map<DropdownMenuItem<int>>((plant) {
+                return DropdownMenuItem<int>(
+                  value: plant['id'],
+                  child: Text(plant['name']),
+                );
+              }).toList(),
+              onChanged: (value) {
+                setState(() {
+                  _selectedPlantId = value;
+                });
+              },
+            ),
+            const SizedBox(height: 16),
+            TextFormField(
+              controller: _plantingAmountController,
+              decoration: const InputDecoration(
+                labelText: 'Ekim Miktarı',
+                border: OutlineInputBorder(),
+              ),
+              keyboardType: TextInputType.number,
+            ),
+            const SizedBox(height: 16),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  _selectedDate == null
+                      ? 'Tarih Seçilmedi'
+                      : 'Seçilen Tarih: ${_selectedDate!.toLocal()}'.split(' ')[0],
+                ),
+                ElevatedButton(
+                  onPressed: () => _pickDate(context),
+                  child: const Text('Tarih Seç'),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            Center(
+              child: ElevatedButton(
+                onPressed: _submitSowing,
+                child: const Text('Ekim Yap'),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
