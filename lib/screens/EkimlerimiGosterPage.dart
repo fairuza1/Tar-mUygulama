@@ -14,22 +14,35 @@ class EkimlerimiGosterPage extends StatefulWidget {
 class _EkimlerimiGosterPageState extends State<EkimlerimiGosterPage> {
   List<dynamic> sowings = [];
   bool isLoading = true;
+  int? userId;
 
   @override
   void initState() {
     super.initState();
-    _fetchSowings();
+    _fetchUserId(); // Kullanıcı ID'sini al
   }
 
-  Future<void> _fetchSowings() async {
+  // Kullanıcı ID'sini SharedPreferences'den al
+  Future<void> _fetchUserId() async {
     final prefs = await SharedPreferences.getInstance();
-    final userId = prefs.getInt('userId');
+    setState(() {
+      userId = prefs.getInt('userId');
+    });
+    print("User ID: $userId");
 
+    // Kullanıcı ID'si alındıysa ekim verilerini çek
+    if (userId != null) {
+      _fetchSowings();
+    }
+  }
+
+  // Ekimleri almak için API çağrısı
+  Future<void> _fetchSowings() async {
     if (userId == null) {
-      _showSnackbar('Kullanıcı bilgileri bulunamadı.', Colors.red);
       setState(() {
         isLoading = false;
       });
+      print("User ID is null, cannot fetch sowings.");
       return;
     }
 
@@ -39,20 +52,38 @@ class _EkimlerimiGosterPageState extends State<EkimlerimiGosterPage> {
         headers: {'Content-Type': 'application/json'},
       );
 
+      // Durum kodu ve yanıtı konsola yazdır
+      print('API Response Status Code: ${response.statusCode}');
+      print('API Response Body: ${response.body}');
+
       if (response.statusCode == 200) {
         final decodedResponse = utf8.decode(response.bodyBytes);
         setState(() {
           sowings = json.decode(decodedResponse);
           isLoading = false;
         });
-      } else {
-        _showSnackbar('Ekimler yüklenemedi. Durum Kodu: ${response.statusCode}', Colors.red);
+
+        // Ekim verilerini konsola yazdır
+        if (sowings.isNotEmpty) {
+          print('Ekimlerim:');
+          for (var sowing in sowings) {
+            print('Plant: ${sowing['plantName']}, Category: ${sowing['categoryName']}, Land: ${sowing['landName']}');
+          }
+        } else {
+          print('Ekim listesi boş.');
+        }
+      } else if (response.statusCode == 204) {
         setState(() {
+          sowings = [];
           isLoading = false;
         });
+        print('Hiç ekim yapılmamış.');
+      } else {
+        _showSnackbar('Ekimler yüklenemedi. Durum Kodu: ${response.statusCode}', Colors.red);
       }
     } catch (e) {
       _showSnackbar('Hata: $e', Colors.red);
+      print("Error: $e"); // Hata mesajını yazdır
       setState(() {
         isLoading = false;
       });
@@ -85,30 +116,27 @@ class _EkimlerimiGosterPageState extends State<EkimlerimiGosterPage> {
           style: GoogleFonts.notoSans(fontSize: 18, color: Colors.grey),
         ),
       )
-          : ListView.builder(
-        itemCount: sowings.length,
-        itemBuilder: (context, index) {
-          final sowing = sowings[index];
-          final sowingDate = DateTime.parse(sowing['sowingDate']);
-          return Card(
-            margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
-            elevation: 4,
-            child: ListTile(
-              contentPadding: const EdgeInsets.all(16),
-              title: Text(
-                '${sowing['plant']['name']} (${sowing['amount']} adet)',
-                style: GoogleFonts.notoSans(fontSize: 16, fontWeight: FontWeight.bold),
+          : Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: ListView.builder(
+          itemCount: sowings.length,
+          itemBuilder: (context, index) {
+            final sowing = sowings[index];
+            return Card(
+              margin: const EdgeInsets.symmetric(vertical: 8),
+              child: ListTile(
+                title: Text(
+                  '${sowing['plantName']} (${sowing['categoryName']})',
+                  style: GoogleFonts.notoSans(fontWeight: FontWeight.bold),
+                ),
+                subtitle: Text(
+                  'Ekim Tarihi: ${sowing['sowingDate']} \nArazi: ${sowing['landName']} \nMiktar: ${sowing['plantingAmount']}',
+                  style: GoogleFonts.notoSans(),
+                ),
               ),
-              subtitle: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text('Arazi: ${sowing['land']['name']}'),
-                  Text('Ekim Tarihi: ${sowingDate.toLocal()}'.split(' ')[0]),
-                ],
-              ),
-            ),
-          );
-        },
+            );
+          },
+        ),
       ),
     );
   }
