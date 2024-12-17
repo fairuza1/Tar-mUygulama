@@ -130,24 +130,22 @@ class _EkimYapPageState extends State<EkimYapPage> {
         _selectedDate == null ||
         _selectedLandId == null ||
         _selectedPlantId == null ||
-         userId==null)
-    {  // Kategori ID'si boş olmamalı
-
+        userId == null) {
       _showSnackbar('Tüm alanları doldurmanız gerekmektedir.', Colors.red);
       return;
     }
 
-    final url = Uri.parse('http://10.0.2.2:8080/api/sowings');
+    final url = Uri.parse('http://10.0.2.2:8080/api/sowings'); // Backend endpoint
     final body = json.encode({
       "landId": _selectedLandId,
       "plantId": _selectedPlantId,
       "plantingAmount": int.parse(_plantingAmountController.text),
       "sowingDate": _selectedDate?.toIso8601String(),
-      "categoryId": _selectedCategoryId,  // Kategori ID'si ekleniyor
-      "categoryName": categories.firstWhere((category) => category['id'] == _selectedCategoryId)['categoryName'],  // Kategori adı ekleniyor
-      "userId":userId,
+      "categoryId": _selectedCategoryId,
+      "categoryName": categories.firstWhere((category) => category['id'] == _selectedCategoryId)['categoryName'],
+      "userId": userId,
     });
-    print("User ID: $userId");
+
     try {
       final response = await http.post(
         url,
@@ -158,7 +156,9 @@ class _EkimYapPageState extends State<EkimYapPage> {
       if (response.statusCode == 201) {
         _showSnackbar('Ekim başarıyla kaydedildi!', Colors.green);
       } else {
-        _showSnackbar('Hata oluştu! HTTP Durum Kodu: ${response.statusCode}', Colors.red);
+        final decodedResponse = json.decode(response.body);
+        final errorMessage = decodedResponse['error'] ?? 'Bilinmeyen bir hata oluştu.';
+        _showSnackbar(errorMessage, Colors.red);
       }
     } catch (e) {
       _showSnackbar('Bir hata oluştu: $e', Colors.red);
