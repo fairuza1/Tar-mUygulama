@@ -140,7 +140,7 @@ class _EkimlerimiGosterPageState extends State<EkimlerimiGosterPage> {
                   },
                   style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
                   child: Text(
-                    'Hasat Et',
+                    'Hasat  Et',
                     style: GoogleFonts.notoSans(color: Colors.white),
                   ),
                 ),
