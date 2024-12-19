@@ -133,6 +133,17 @@ class _EkimlerimiGosterPageState extends State<EkimlerimiGosterPage> {
                   'Ekim Tarihi: ${sowing['sowingDate']} \nArazi: ${sowing['landName']} \nMiktar: ${sowing['plantingAmount']}',
                   style: GoogleFonts.notoSans(),
                 ),
+                trailing: ElevatedButton(
+                  onPressed: () {
+                    // Hasat işlemi başlatılıyor
+                    _showSnackbar('Hasat işlemi başlatıldı: ${sowing['landName']}', Colors.green);
+                  },
+                  style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
+                  child: Text(
+                    'Hasat Et',
+                    style: GoogleFonts.notoSans(color: Colors.white),
+                  ),
+                ),
               ),
             );
           },
