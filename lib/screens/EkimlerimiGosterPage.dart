@@ -13,38 +13,28 @@ class EkimlerimiGosterPage extends StatefulWidget {
 
 class _EkimlerimiGosterPageState extends State<EkimlerimiGosterPage> {
   List<dynamic> sowings = [];
+  List<int> harvestedSowings = []; // Hasat edilen sowing ID'leri
   bool isLoading = true;
   int? userId;
 
   @override
   void initState() {
     super.initState();
-    _fetchUserId(); // Kullanıcı ID'sini al
+    _fetchUserId();
   }
 
-  // Kullanıcı ID'sini SharedPreferences'den al
   Future<void> _fetchUserId() async {
     final prefs = await SharedPreferences.getInstance();
     setState(() {
       userId = prefs.getInt('userId');
     });
-    print("User ID: $userId");
-
-    // Kullanıcı ID'si alındıysa ekim verilerini çek
     if (userId != null) {
       _fetchSowings();
     }
   }
 
-  // Ekimleri almak için API çağrısı
   Future<void> _fetchSowings() async {
-    if (userId == null) {
-      setState(() {
-        isLoading = false;
-      });
-      print("User ID is null, cannot fetch sowings.");
-      return;
-    }
+    if (userId == null) return;
 
     try {
       final response = await http.get(
@@ -52,41 +42,46 @@ class _EkimlerimiGosterPageState extends State<EkimlerimiGosterPage> {
         headers: {'Content-Type': 'application/json'},
       );
 
-      // Durum kodu ve yanıtı konsola yazdır
-      print('API Response Status Code: ${response.statusCode}');
-      print('API Response Body: ${response.body}');
-
       if (response.statusCode == 200) {
         final decodedResponse = utf8.decode(response.bodyBytes);
         setState(() {
           sowings = json.decode(decodedResponse);
           isLoading = false;
         });
-
-        // Ekim verilerini konsola yazdır
-        if (sowings.isNotEmpty) {
-          print('Ekimlerim:');
-          for (var sowing in sowings) {
-            print('Plant: ${sowing['plantName']}, Category: ${sowing['categoryName']}, Land: ${sowing['landName']}');
-          }
-        } else {
-          print('Ekim listesi boş.');
-        }
       } else if (response.statusCode == 204) {
         setState(() {
           sowings = [];
           isLoading = false;
         });
-        print('Hiç ekim yapılmamış.');
       } else {
         _showSnackbar('Ekimler yüklenemedi. Durum Kodu: ${response.statusCode}', Colors.red);
       }
     } catch (e) {
       _showSnackbar('Hata: $e', Colors.red);
-      print("Error: $e"); // Hata mesajını yazdır
       setState(() {
         isLoading = false;
       });
+    }
+  }
+
+  Future<void> _harvestSowing(int sowingId) async {
+    try {
+      final response = await http.post(
+        Uri.parse('http://10.0.2.2:8080/harvests'),
+        headers: {'Content-Type': 'application/json'},
+        body: json.encode({'sowingId': sowingId, 'harvestDate': DateTime.now().toIso8601String()}),
+      );
+
+      if (response.statusCode == 201) {
+        setState(() {
+          harvestedSowings.add(sowingId); // Hasat edilen ID'yi listeye ekle
+        });
+        _showSnackbar('Hasat başarıyla tamamlandı!', Colors.green);
+      } else {
+        _showSnackbar('Hasat işlemi başarısız. Durum Kodu: ${response.statusCode}', Colors.red);
+      }
+    } catch (e) {
+      _showSnackbar('Hata: $e', Colors.red);
     }
   }
 
@@ -122,6 +117,8 @@ class _EkimlerimiGosterPageState extends State<EkimlerimiGosterPage> {
           itemCount: sowings.length,
           itemBuilder: (context, index) {
             final sowing = sowings[index];
+            final isHarvested = harvestedSowings.contains(sowing['id']); // Hasat edilmiş mi?
+
             return Card(
               margin: const EdgeInsets.symmetric(vertical: 8),
               child: ListTile(
@@ -134,13 +131,14 @@ class _EkimlerimiGosterPageState extends State<EkimlerimiGosterPage> {
                   style: GoogleFonts.notoSans(),
                 ),
                 trailing: ElevatedButton(
-                  onPressed: () {
-                    // Hasat işlemi başlatılıyor
-                    _showSnackbar('Hasat işlemi başlatıldı: ${sowing['landName']}', Colors.green);
-                  },
-                  style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
+                  onPressed: isHarvested
+                      ? null // Eğer hasat edilmişse butonu devre dışı bırak
+                      : () => _harvestSowing(sowing['id']),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: isHarvested ? Colors.grey : Colors.green,
+                  ),
                   child: Text(
-                    'Hasat  Et',
+                    isHarvested ? 'Hasat Edildi' : 'Hasat Et',
                     style: GoogleFonts.notoSans(color: Colors.white),
                   ),
                 ),
