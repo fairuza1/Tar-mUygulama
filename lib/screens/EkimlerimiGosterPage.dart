@@ -20,7 +20,20 @@ class _EkimlerimiGosterPageState extends State<EkimlerimiGosterPage> {
   @override
   void initState() {
     super.initState();
+    _loadHarvestedSowings(); // Hasat edilenleri yükle
     _fetchUserId();
+  }
+
+  Future<void> _loadHarvestedSowings() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      harvestedSowings = prefs.getStringList('harvestedSowings')?.map(int.parse).toList() ?? [];
+    });
+  }
+
+  Future<void> _saveHarvestedSowings() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setStringList('harvestedSowings', harvestedSowings.map((id) => id.toString()).toList());
   }
 
   Future<void> _fetchUserId() async {
@@ -76,6 +89,7 @@ class _EkimlerimiGosterPageState extends State<EkimlerimiGosterPage> {
         setState(() {
           harvestedSowings.add(sowingId); // Hasat edilen ID'yi listeye ekle
         });
+        await _saveHarvestedSowings(); // Hasat edilenleri kaydet
         _showSnackbar('Hasat başarıyla tamamlandı!', Colors.green);
       } else {
         _showSnackbar('Hasat işlemi başarısız. Durum Kodu: ${response.statusCode}', Colors.red);
