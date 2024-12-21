@@ -31,15 +31,20 @@ class _HasatlarimiGosterPageState extends State<HasatlarimiGosterPage> {
 
     // Kullanıcı ID'si mevcutsa hasatları getir
     if (userId != null) {
-      _fetchHarvests();
+      _fetchHarvests(userId!);
+    } else {
+      setState(() {
+        isLoading = false;
+      });
+      _showSnackbar('Kullanıcı ID bulunamadı.', Colors.red);
     }
   }
 
   // Hasatları almak için API çağrısı
-  Future<void> _fetchHarvests() async {
+  Future<void> _fetchHarvests(int userId) async {
     try {
       final response = await http.get(
-        Uri.parse('http://10.0.2.2:8080/harvests'), // Hasatlar API'si
+        Uri.parse('http://10.0.2.2:8080/harvests/user/$userId'), // Kullanıcıya ait hasatlar API'si
         headers: {'Content-Type': 'application/json'},
       );
 
@@ -49,8 +54,15 @@ class _HasatlarimiGosterPageState extends State<HasatlarimiGosterPage> {
           harvests = json.decode(decodedResponse);
           isLoading = false;
         });
+      } else if (response.statusCode == 204) {
+        setState(() {
+          harvests = [];
+          isLoading = false;
+        });
+        _showSnackbar('Hiç hasat bulunamadı.', Colors.orange);
       } else {
-        _showSnackbar('Hasatlar yüklenemedi. Durum kodu: ${response.statusCode}', Colors.red);
+        _showSnackbar(
+            'Hasatlar yüklenemedi. Durum kodu: ${response.statusCode}', Colors.red);
       }
     } catch (e) {
       _showSnackbar('Hata: $e', Colors.red);
