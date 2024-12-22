@@ -22,14 +22,12 @@ class _HasatlarimiGosterPageState extends State<HasatlarimiGosterPage> {
     _fetchUserId();
   }
 
-  // Kullanıcı ID'sini SharedPreferences'den al
   Future<void> _fetchUserId() async {
     final prefs = await SharedPreferences.getInstance();
     setState(() {
       userId = prefs.getInt('userId');
     });
 
-    // Kullanıcı ID'si mevcutsa hasatları getir
     if (userId != null) {
       _fetchHarvests(userId!);
     } else {
@@ -40,11 +38,10 @@ class _HasatlarimiGosterPageState extends State<HasatlarimiGosterPage> {
     }
   }
 
-  // Hasatları almak için API çağrısı
   Future<void> _fetchHarvests(int userId) async {
     try {
       final response = await http.get(
-        Uri.parse('http://10.0.2.2:8080/harvests/user/$userId'), // Kullanıcıya ait hasatlar API'si
+        Uri.parse('http://10.0.2.2:8080/harvests/user/$userId'),
         headers: {'Content-Type': 'application/json'},
       );
 
@@ -108,11 +105,19 @@ class _HasatlarimiGosterPageState extends State<HasatlarimiGosterPage> {
               margin: const EdgeInsets.symmetric(vertical: 8),
               child: ListTile(
                 title: Text(
-                  'Hasat ID: ${harvest['id']}',
+                  harvest['plantName'] != null
+                      ? 'Arazi: ${harvest['landName'] ?? 'Bilinmiyor'}'
+                      : 'Hasat ID: ${harvest['id']}',
                   style: GoogleFonts.notoSans(fontWeight: FontWeight.bold),
                 ),
                 subtitle: Text(
-                  'Hasat Tarihi: ${harvest['harvestDate']}\nEkim ID: ${harvest['sowingId']}',
+                  '''
+Hasat Tarihi: ${harvest['harvestDate']}
+Ekim ID: ${harvest['sowingId']}
+Kategori: ${harvest['categoryName'] ?? 'Bilinmiyor'}
+Bitki: ${harvest['plantName']}
+Ekim Miktarı: ${harvest['plantingAmount']}
+                            ''',
                   style: GoogleFonts.notoSans(),
                 ),
               ),
