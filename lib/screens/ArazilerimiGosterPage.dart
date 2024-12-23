@@ -143,7 +143,8 @@ class _ArazilerimiGosterPageState extends State<ArazilerimiGosterPage> {
                 ),
               ),
               subtitle: Text(
-                '${land['city'] ?? 'Bilinmeyen Şehir'} - ${land['district'] ?? 'Bilinmeyen İlçe'}',
+                '${land['city'] ?? 'Bilinmeyen Şehir'} - ${land['district'] ?? 'Bilinmeyen İlçe'} - ${land['village'] ?? 'Bilinmeyen Mahalle'}\n'
+                    'Arazi Büyüklüğü: ${land['landSize'] ?? 'Bilinmeyen'} hektar',
                 style: GoogleFonts.notoSans(fontSize: 14),
               ),
               trailing: Row(
