@@ -14,6 +14,7 @@ class EkimlerimiGosterPage extends StatefulWidget {
 class _EkimlerimiGosterPageState extends State<EkimlerimiGosterPage> {
   List<dynamic> sowings = [];
   List<int> harvestedSowings = []; // Hasat edilen sowing ID'leri
+  List<dynamic> lands = []; // Arazilerin listesi
   bool isLoading = true;
   int? userId;
 
@@ -22,6 +23,7 @@ class _EkimlerimiGosterPageState extends State<EkimlerimiGosterPage> {
     super.initState();
     _loadHarvestedSowings(); // Hasat edilenleri yükle
     _fetchUserId();
+    _fetchLands(); // Arazileri yükle
   }
 
   Future<void> _loadHarvestedSowings() async {
@@ -43,6 +45,28 @@ class _EkimlerimiGosterPageState extends State<EkimlerimiGosterPage> {
     });
     if (userId != null) {
       _fetchSowings();
+    }
+  }
+
+  Future<void> _fetchLands() async {
+    if (userId == null) return;
+
+    try {
+      final response = await http.get(
+        Uri.parse('http://10.0.2.2:8080/lands?userId=$userId'),
+        headers: {'Content-Type': 'application/json'},
+      );
+
+      if (response.statusCode == 200) {
+        final decodedResponse = utf8.decode(response.bodyBytes);
+        setState(() {
+          lands = json.decode(decodedResponse);
+        });
+      } else {
+        _showSnackbar('Araziler yüklenemedi. Durum Kodu: ${response.statusCode}', Colors.red);
+      }
+    } catch (e) {
+      _showSnackbar('Hata: $e', Colors.red);
     }
   }
 
@@ -132,6 +156,11 @@ class _EkimlerimiGosterPageState extends State<EkimlerimiGosterPage> {
           itemBuilder: (context, index) {
             final sowing = sowings[index];
             final isHarvested = harvestedSowings.contains(sowing['id']); // Hasat edilmiş mi?
+            final land = lands.firstWhere(
+                  (land) => land['id'] == sowing['landId'],
+              orElse: () => {},
+            );
+            final remainingSize = land.isNotEmpty ? land['remainingSize'] : 0.0;
 
             return Card(
               margin: const EdgeInsets.symmetric(vertical: 8),
@@ -141,7 +170,7 @@ class _EkimlerimiGosterPageState extends State<EkimlerimiGosterPage> {
                   style: GoogleFonts.notoSans(fontWeight: FontWeight.bold),
                 ),
                 subtitle: Text(
-                  'Ekim Tarihi: ${sowing['sowingDate']} \nArazi: ${sowing['landName']} \nMiktar: ${sowing['plantingAmount']}',
+                  'Ekim Tarihi: ${sowing['sowingDate']} \nArazi: ${sowing['landName']} \nMiktar: ${sowing['plantingAmount']} \nKalan Alan: ${sowing['remainingSize']} m²',
                   style: GoogleFonts.notoSans(),
                 ),
                 trailing: ElevatedButton(
