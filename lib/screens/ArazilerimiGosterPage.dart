@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'UpdateLandPage.dart';
 
 class ArazilerimiGosterPage extends StatefulWidget {
   const ArazilerimiGosterPage({Key? key}) : super(key: key);
@@ -58,15 +59,13 @@ class _ArazilerimiGosterPageState extends State<ArazilerimiGosterPage> {
 
   Future<void> _deleteLand(int landId) async {
     try {
-      // Backend API'sine id ile DELETE isteği gönderiyoruz
       final response = await http.delete(
-        Uri.parse('http://10.0.2.2:8080/lands/$landId'),  // landId'yi URL'ye ekliyoruz
+        Uri.parse('http://10.0.2.2:8080/lands/$landId'),
         headers: {'Content-Type': 'application/json'},
       );
 
       if (response.statusCode == 200 || response.statusCode == 204) {
         setState(() {
-          // Silinen araziyi listeden çıkarıyoruz
           lands.removeWhere((land) => land['id'] == landId);
         });
         _showSnackbar('Arazi başarıyla silindi.', Colors.green);
@@ -77,17 +76,6 @@ class _ArazilerimiGosterPageState extends State<ArazilerimiGosterPage> {
     } catch (e) {
       _showSnackbar('Silme sırasında hata oluştu: $e', Colors.red);
     }
-  }
-
-
-  void _updateLand(int landId) {
-    // Güncelleme işlemi için bir sayfaya yönlendirme (isteğe bağlı)
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => UpdateLandPage(landId: landId),
-      ),
-    );
   }
 
   void _showSnackbar(String message, Color color) {
@@ -152,7 +140,18 @@ class _ArazilerimiGosterPageState extends State<ArazilerimiGosterPage> {
                 children: [
                   IconButton(
                     icon: const Icon(Icons.edit, color: Colors.blue),
-                    onPressed: () => _updateLand(land['id']),
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => UpdateLandPage(landId: land['id']),
+                        ),
+                      ).then((value) {
+                        if (value == true) {
+                          _fetchLands();
+                        }
+                      });
+                    },
                   ),
                   IconButton(
                     icon: const Icon(Icons.delete, color: Colors.red),
@@ -163,29 +162,6 @@ class _ArazilerimiGosterPageState extends State<ArazilerimiGosterPage> {
             ),
           );
         },
-      ),
-    );
-  }
-}
-
-class UpdateLandPage extends StatelessWidget {
-  final int landId;
-
-  const UpdateLandPage({Key? key, required this.landId}) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Colors.green,
-        title: Text('Arazi Güncelle', style: GoogleFonts.notoSans()),
-        centerTitle: true,
-      ),
-      body: Center(
-        child: Text(
-          'Arazi ID: $landId için güncelleme sayfası.',
-          style: GoogleFonts.notoSans(fontSize: 18),
-        ),
       ),
     );
   }
