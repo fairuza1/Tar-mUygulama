@@ -1,6 +1,8 @@
 import 'dart:convert';
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:image_picker/image_picker.dart'; // Fotoğraf seçmek için
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -23,6 +25,8 @@ class _AraziEklePageState extends State<AraziEklePage> {
   List<String> iller = [];
   List<String> ilceler = [];
   List<String> koyler = [];
+
+  File? _selectedImage; // Seçilen fotoğraf dosyası
 
   @override
   void initState() {
@@ -86,34 +90,53 @@ class _AraziEklePageState extends State<AraziEklePage> {
     return json.decode(response) as List<dynamic>;
   }
 
+  // Fotoğraf seçme
+  Future<void> _pickImage() async {
+    final picker = ImagePicker();
+    final pickedFile = await picker.pickImage(source: ImageSource.gallery);
+
+    if (pickedFile != null) {
+      setState(() {
+        _selectedImage = File(pickedFile.path);
+      });
+    }
+  }
+
   Future<void> _addLand() async {
     if (!_formKey.currentState!.validate()) return;
 
     final prefs = await SharedPreferences.getInstance();
     final userId = prefs.getInt('userId');
 
-    final newLand = {
-      'name': _landNameController.text,
-      'landSize': int.tryParse(_landSizeController.text),
-      'city': selectedIl,
-      'district': selectedIlce,
-      'village': selectedKoy,
-      'userId': userId,
-    };
+    final request = http.MultipartRequest(
+      'POST',
+      Uri.parse('http://10.0.2.2:8080/lands'),
+    );
+
+    // Form verileri
+    request.fields['name'] = _landNameController.text;
+    request.fields['landSize'] = _landSizeController.text;
+    request.fields['city'] = selectedIl!;
+    request.fields['district'] = selectedIlce!;
+    request.fields['village'] = selectedKoy!;
+    request.fields['userId'] = userId.toString();
+
+    // Fotoğrafı ekleyelim
+    if (_selectedImage != null) {
+      request.files.add(await http.MultipartFile.fromPath(
+        'photo',
+        _selectedImage!.path,
+      ));
+    }
 
     try {
-      final response = await http.post(
-        Uri.parse('http://10.0.2.2:8080/lands'),
-        headers: {'Content-Type': 'application/json'},
-        body: json.encode(newLand),
-      );
+      final response = await request.send();
 
       if (response.statusCode == 201) {
         _showSnackbar('Arazi başarıyla kaydedildi!', Colors.green);
         Navigator.pushNamed(context, '/ArazilerimiGosterPage');
       } else {
-        _showSnackbar(
-            'Arazi kaydedilmedi. Durum Kodu: ${response.statusCode}', Colors.red);
+        _showSnackbar('Arazi kaydedilmedi. Durum Kodu: ${response.statusCode}', Colors.red);
       }
     } catch (e) {
       _showSnackbar('Hata: $e', Colors.red);
@@ -245,6 +268,22 @@ class _AraziEklePageState extends State<AraziEklePage> {
                     ),
                     const SizedBox(height: 20),
                     ElevatedButton(
+                      onPressed: _pickImage, // Fotoğraf seçme
+                      style: ElevatedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 15),
+                        backgroundColor: const Color(0xFF228B22),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                      ),
+                      child: const Text('Fotoğraf Seç', style: TextStyle(fontSize: 18, color: Colors.white)),
+                    ),
+                    if (_selectedImage != null)
+                      Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 10),
+                        child: Image.file(_selectedImage!),
+                      ),
+                    ElevatedButton(
                       onPressed: _addLand,
                       style: ElevatedButton.styleFrom(
                         padding: const EdgeInsets.symmetric(vertical: 15),
@@ -253,8 +292,7 @@ class _AraziEklePageState extends State<AraziEklePage> {
                           borderRadius: BorderRadius.circular(10),
                         ),
                       ),
-                      child: const Text('Arazi Ekle',
-                          style: TextStyle(fontSize: 18, color: Colors.white)),
+                      child: const Text('Arazi Ekle', style: TextStyle(fontSize: 18, color: Colors.white)),
                     ),
                   ],
                 ),

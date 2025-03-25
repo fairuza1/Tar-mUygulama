@@ -111,6 +111,11 @@ class _ArazilerimiGosterPageState extends State<ArazilerimiGosterPage> {
         itemCount: lands.length,
         itemBuilder: (context, index) {
           final land = lands[index];
+          // Check if photoPath is null or empty, if so, use default image
+          String imageUrl = land['photoPath'] != null && land['photoPath'] != ''
+              ? 'http://10.0.2.2:8080/lands/photo/${land['photoPath']}'
+              : 'https://via.placeholder.com/150'; // Default image URL
+
           return Card(
             margin: const EdgeInsets.symmetric(
               vertical: 8.0,
@@ -122,6 +127,15 @@ class _ArazilerimiGosterPageState extends State<ArazilerimiGosterPage> {
             ),
             child: ListTile(
               contentPadding: const EdgeInsets.all(16),
+              leading: ClipRRect(
+                borderRadius: BorderRadius.circular(8),
+                child: Image.network(
+                  imageUrl,
+                  width: 80,
+                  height: 80,
+                  fit: BoxFit.cover,
+                ),
+              ),
               title: Text(
                 land['name'] ?? 'Bilinmeyen Arazi',
                 style: GoogleFonts.notoSans(
@@ -144,7 +158,8 @@ class _ArazilerimiGosterPageState extends State<ArazilerimiGosterPage> {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => UpdateLandPage(landId: land['id']),
+                          builder: (context) =>
+                              UpdateLandPage(landId: land['id']),
                         ),
                       ).then((value) {
                         if (value == true) {
