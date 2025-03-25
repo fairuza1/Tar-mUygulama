@@ -66,6 +66,7 @@ flutter:
     - assets/Data/mahalleler-3.json
     - assets/Data/mahalleler-4.json
     - assets/images/
+    - assets/images/DefaultImage.jpg
 
 
   # An image asset can refer to one or more resolution-specific "variants", see

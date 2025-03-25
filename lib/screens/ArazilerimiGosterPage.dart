@@ -114,7 +114,7 @@ class _ArazilerimiGosterPageState extends State<ArazilerimiGosterPage> {
           // Check if photoPath is null or empty, if so, use default image
           String imageUrl = land['photoPath'] != null && land['photoPath'] != ''
               ? 'http://10.0.2.2:8080/lands/photo/${land['photoPath']}'
-              : 'https://via.placeholder.com/150'; // Default image URL
+              : 'assets/images/DefaultImage.jpg'; // Default image asset path
 
           return Card(
             margin: const EdgeInsets.symmetric(
@@ -129,7 +129,14 @@ class _ArazilerimiGosterPageState extends State<ArazilerimiGosterPage> {
               contentPadding: const EdgeInsets.all(16),
               leading: ClipRRect(
                 borderRadius: BorderRadius.circular(8),
-                child: Image.network(
+                child: imageUrl.startsWith('http')
+                    ? Image.network(
+                  imageUrl,
+                  width: 80,
+                  height: 80,
+                  fit: BoxFit.cover,
+                )
+                    : Image.asset(
                   imageUrl,
                   width: 80,
                   height: 80,
