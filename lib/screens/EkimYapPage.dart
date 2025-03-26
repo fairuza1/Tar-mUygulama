@@ -218,9 +218,49 @@ class _EkimYapPageState extends State<EkimYapPage> {
               ),
               value: _selectedLandId,
               items: lands.map<DropdownMenuItem<int>>((land) {
+                String? photoPath = land['photoPath'];
+                String imageUrl = (photoPath != null && photoPath.isNotEmpty)
+                    ? 'http://10.0.2.2:8080/lands/photo/$photoPath' // Sunucudan çek
+                    : ''; // Eğer boşsa, boş bırak
+
                 return DropdownMenuItem<int>(
                   value: land['id'],
-                  child: Text(land['name'] ?? 'Bilinmeyen Arazi'),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min, // Fazla genişlemeyi engeller
+                    children: [
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(6), // Hafif yuvarlatılmış kenarlar
+                        child: imageUrl.isNotEmpty
+                            ? Image.network(
+                          imageUrl,
+                          width: 30,
+                          height: 30,
+                          fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) {
+                            return Image.asset(
+                              'assets/images/DefaultImage.jpg', // Yüklenemezse assets'ten al
+                              width: 30,
+                              height: 30,
+                            );
+                          },
+                        )
+                            : Image.asset(
+                          'assets/images/DefaultImage.jpg', // Eğer URL boşsa, direkt assets kullan
+                          width: 30,
+                          height: 30,
+                        ),
+                      ),
+                      const SizedBox(width: 8), // Resim ile yazı arasında boşluk ekle
+                      Flexible( // Fazla genişlemeyi engellemek için
+                        child: Text(
+                          land['name'] ?? 'Bilinmeyen Arazi',
+                          style: GoogleFonts.notoSans(),
+                          overflow: TextOverflow.ellipsis, // Taşma olursa üç nokta koy
+                          maxLines: 1,
+                        ),
+                      ),
+                    ],
+                  ),
                 );
               }).toList(),
               onChanged: (value) {
@@ -229,6 +269,7 @@ class _EkimYapPageState extends State<EkimYapPage> {
                 });
               },
             ),
+
             const SizedBox(height: 16),
             DropdownButtonFormField<int>(
               decoration: const InputDecoration(
