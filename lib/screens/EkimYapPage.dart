@@ -228,6 +228,15 @@ class _EkimYapPageState extends State<EkimYapPage> {
                   child: Row(
                     mainAxisSize: MainAxisSize.min, // Fazla genişlemeyi engeller
                     children: [
+                      Flexible( // Metni sağ tarafa itmek için
+                        child: Text(
+                          land['name'] ?? 'Bilinmeyen Arazi',
+                          style: GoogleFonts.notoSans(),
+                          overflow: TextOverflow.ellipsis, // Taşma olursa üç nokta koy
+                          maxLines: 1,
+                        ),
+                      ),
+                      const SizedBox(width: 8), // Resim ile yazı arasında boşluk ekle
                       ClipRRect(
                         borderRadius: BorderRadius.circular(6), // Hafif yuvarlatılmış kenarlar
                         child: imageUrl.isNotEmpty
@@ -248,15 +257,6 @@ class _EkimYapPageState extends State<EkimYapPage> {
                           'assets/images/DefaultImage.jpg', // Eğer URL boşsa, direkt assets kullan
                           width: 30,
                           height: 30,
-                        ),
-                      ),
-                      const SizedBox(width: 8), // Resim ile yazı arasında boşluk ekle
-                      Flexible( // Fazla genişlemeyi engellemek için
-                        child: Text(
-                          land['name'] ?? 'Bilinmeyen Arazi',
-                          style: GoogleFonts.notoSans(),
-                          overflow: TextOverflow.ellipsis, // Taşma olursa üç nokta koy
-                          maxLines: 1,
                         ),
                       ),
                     ],
