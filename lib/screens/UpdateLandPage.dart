@@ -15,8 +15,8 @@ class UpdateLandPage extends StatefulWidget {
 
 class _UpdateLandPageState extends State<UpdateLandPage> {
   final _formKey = GlobalKey<FormState>();
-  String? name, city, district, village; // Nullable değişkenler
-  double? landSize; // Nullable
+  String? name, city, district, village;
+  double? landSize;
   bool isLoading = false;
   int? userId;
 
@@ -27,13 +27,11 @@ class _UpdateLandPageState extends State<UpdateLandPage> {
     _fetchLandData();
   }
 
-  // Kullanıcı ID'sini SharedPreferences'ten al
   Future<void> _getUserId() async {
     final prefs = await SharedPreferences.getInstance();
     userId = prefs.getInt('userId');
   }
 
-  // Arazi verilerini almak için HTTP isteği
   Future<void> _fetchLandData() async {
     setState(() {
       isLoading = true;
@@ -41,12 +39,12 @@ class _UpdateLandPageState extends State<UpdateLandPage> {
 
     try {
       final response = await http.get(
-        Uri.parse('http://10.0.2.2:8080/lands/detail/${widget.landId}'), // API endpointini kullanıyoruz
+        Uri.parse('http://10.0.2.2:8080/lands/detail/${widget.landId}'),
         headers: {'Content-Type': 'application/json'},
       );
 
       if (response.statusCode == 200) {
-        final decodedResponse = utf8.decode(response.bodyBytes); // UTF-8 decode işlemi
+        final decodedResponse = utf8.decode(response.bodyBytes);
         final landData = json.decode(decodedResponse);
 
         setState(() {
@@ -71,7 +69,6 @@ class _UpdateLandPageState extends State<UpdateLandPage> {
     }
   }
 
-  // Arazi güncelleme işlemi
   Future<void> _updateLand() async {
     if (!_formKey.currentState!.validate()) {
       return;
@@ -91,18 +88,30 @@ class _UpdateLandPageState extends State<UpdateLandPage> {
           'district': district,
           'village': village,
           'landSize': landSize,
-          'userId': userId, // Kullanıcı ID'sini burada ekledik
+          'userId': userId,
         }),
       );
 
       if (response.statusCode == 200) {
         _showSnackbar('Arazi başarıyla güncellendi.', Colors.green);
-        Navigator.pop(context, true); // Güncelleme başarılıysa geri dön
+        Navigator.pop(context, true);
       } else {
-        _showSnackbar('Arazi güncellenemedi. Durum Kodu: ${response.statusCode}', Colors.red);
+        final decodedResponse = utf8.decode(response.bodyBytes);
+        String errorMessage = 'Arazi güncellenemedi. Durum Kodu: ${response.statusCode}';
+
+        try {
+          final errorBody = json.decode(decodedResponse);
+          if (errorBody is Map && errorBody.containsKey('error')) {
+            errorMessage = errorBody['error']; // Hata mesajını 'error' anahtarından al
+          }
+        } catch (_) {
+          // Eğer hata mesajı decode edilemezse, varsayılan hata mesajını kullan
+        }
+
+        _showSnackbar(errorMessage, Colors.red);
       }
     } catch (e) {
-      _showSnackbar('Hata: $e', Colors.red);
+      _showSnackbar('Bir hata oluştu: $e', Colors.red);
     } finally {
       setState(() {
         isLoading = false;
@@ -110,7 +119,7 @@ class _UpdateLandPageState extends State<UpdateLandPage> {
     }
   }
 
-  // Snackbar mesajı gösterme fonksiyonu
+
   void _showSnackbar(String message, Color color) {
     final snackBar = SnackBar(
       content: Text(message),
@@ -139,7 +148,7 @@ class _UpdateLandPageState extends State<UpdateLandPage> {
               children: [
                 TextFormField(
                   initialValue: name ?? '',
-                  decoration: InputDecoration(labelText: 'Arazi Adı'),
+                  decoration: const InputDecoration(labelText: 'Arazi Adı'),
                   onChanged: (value) => name = value,
                   validator: (value) {
                     if (value == null || value.isEmpty) {
@@ -150,7 +159,7 @@ class _UpdateLandPageState extends State<UpdateLandPage> {
                 ),
                 TextFormField(
                   initialValue: city ?? '',
-                  decoration: InputDecoration(labelText: 'Şehir'),
+                  decoration: const InputDecoration(labelText: 'Şehir'),
                   onChanged: (value) => city = value,
                   validator: (value) {
                     if (value == null || value.isEmpty) {
@@ -161,7 +170,7 @@ class _UpdateLandPageState extends State<UpdateLandPage> {
                 ),
                 TextFormField(
                   initialValue: district ?? '',
-                  decoration: InputDecoration(labelText: 'İlçe'),
+                  decoration: const InputDecoration(labelText: 'İlçe'),
                   onChanged: (value) => district = value,
                   validator: (value) {
                     if (value == null || value.isEmpty) {
@@ -172,7 +181,7 @@ class _UpdateLandPageState extends State<UpdateLandPage> {
                 ),
                 TextFormField(
                   initialValue: village ?? '',
-                  decoration: InputDecoration(labelText: 'Mahalle'),
+                  decoration: const InputDecoration(labelText: 'Mahalle'),
                   onChanged: (value) => village = value,
                   validator: (value) {
                     if (value == null || value.isEmpty) {
@@ -183,7 +192,7 @@ class _UpdateLandPageState extends State<UpdateLandPage> {
                 ),
                 TextFormField(
                   initialValue: landSize?.toString() ?? '',
-                  decoration: InputDecoration(labelText: 'Arazi Büyüklüğü (Hektar)'),
+                  decoration: const InputDecoration(labelText: 'Arazi Büyüklüğü (Hektar)'),
                   keyboardType: TextInputType.number,
                   onChanged: (value) {
                     landSize = double.tryParse(value) ?? 0;
