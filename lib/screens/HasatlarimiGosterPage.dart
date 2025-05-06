@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'DegerlendirPage.dart';
 
 class HasatlarimiGosterPage extends StatefulWidget {
   const HasatlarimiGosterPage({Key? key}) : super(key: key);
@@ -103,22 +104,47 @@ class _HasatlarimiGosterPageState extends State<HasatlarimiGosterPage> {
             final harvest = harvests[index];
             return Card(
               margin: const EdgeInsets.symmetric(vertical: 8),
-              child: ListTile(
-                title: Text(
-                  harvest['plantName'] != null
-                      ? 'Arazi: ${harvest['landName'] ?? 'Bilinmiyor'}'
-                      : 'Hasat ID: ${harvest['id']}',
-                  style: GoogleFonts.notoSans(fontWeight: FontWeight.bold),
-                ),
-                subtitle: Text(
-                  '''
+              child: Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    ListTile(
+                      title: Text(
+                        harvest['plantName'] != null
+                            ? 'Arazi: ${harvest['landName'] ?? 'Bilinmiyor'}'
+                            : 'Hasat ID: ${harvest['id']}',
+                        style: GoogleFonts.notoSans(fontWeight: FontWeight.bold),
+                      ),
+                      subtitle: Text(
+                        '''
 Hasat Tarihi: ${harvest['harvestDate']}
 Ekim ID: ${harvest['sowingId']}
 Kategori: ${harvest['categoryName'] ?? 'Bilinmiyor'}
 Bitki: ${harvest['plantName']}
 Ekim Miktarı: ${harvest['plantingAmount']}
-                            ''',
-                  style: GoogleFonts.notoSans(),
+                                  ''',
+                        style: GoogleFonts.notoSans(),
+                      ),
+                    ),
+                    Align(
+                      alignment: Alignment.centerRight,
+                      child: ElevatedButton(
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) =>
+                                  DegerlendirPage(harvest: harvest),
+                            ),
+                          );
+                        },
+                        style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.green),
+                        child: Text('Değerlendir', style: GoogleFonts.notoSans()),
+                      ),
+                    ),
+                  ],
                 ),
               ),
             );
