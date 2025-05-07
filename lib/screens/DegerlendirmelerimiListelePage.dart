@@ -44,13 +44,28 @@ class _DegerlendirmelerimiListelePageState
         title: const Text('Değerlendirmelerimi Listele'),
         backgroundColor: Colors.green,
       ),
-      body: ListView.builder(
+      body: ratings.isEmpty
+          ? const Center(child: CircularProgressIndicator())
+          : ListView.builder(
         itemCount: ratings.length,
         itemBuilder: (context, index) {
           final rating = ratings[index];
-          return ListTile(
-            title: Text('Hasat ID: ${rating['harvestId']}'),
-            subtitle: Text('Değerlendirme ID: ${rating['id']}'),
+          return Card(
+            margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+            elevation: 4,
+            child: ListTile(
+              contentPadding: const EdgeInsets.all(16.0),
+              title: Text('Hasat ID: ${rating['harvestId']}'),
+              subtitle: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('Değerlendirme ID: ${rating['id']}'),
+                  Text('Puan: ${rating['rating']}'),
+                  Text('Yorum: ${rating['comment'] ?? 'Yorum yok'}'),
+                  Text('Hasat Durumu: ${rating['harvestStatus'] ?? 'Durum belirtilmemiş'}'),
+                ],
+              ),
+            ),
           );
         },
       ),

@@ -3,10 +3,19 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
 
-class DegerlendirPage extends StatelessWidget {
+class DegerlendirPage extends StatefulWidget {
   final Map<String, dynamic> harvest;
 
   const DegerlendirPage({Key? key, required this.harvest}) : super(key: key);
+
+  @override
+  _DegerlendirPageState createState() => _DegerlendirPageState();
+}
+
+class _DegerlendirPageState extends State<DegerlendirPage> {
+  final _commentController = TextEditingController();
+  int? _rating;
+  String _harvestStatus = 'normal'; // Varsayılan durum "normal"
 
   Future<void> _submitRating(BuildContext context) async {
     final url = Uri.parse('http://10.0.2.2:8080/api/ratings'); // Emülatör için localhost
@@ -15,10 +24,15 @@ class DegerlendirPage extends StatelessWidget {
       final response = await http.post(
         url,
         headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({'harvestId': harvest['id']}),
+        body: jsonEncode({
+          'harvestId': widget.harvest['id'],
+          'rating': _rating,
+          'comment': _commentController.text,
+          'harvestStatus': _harvestStatus,
+        }),
       );
 
-      print("🔁 Gönderilen harvest ID: ${harvest['id']}");
+      print("🔁 Gönderilen harvest ID: ${widget.harvest['id']}");
       print("📡 Durum Kodu: ${response.statusCode}");
       print("📥 Cevap Gövdesi: ${response.body}");
 
@@ -56,13 +70,57 @@ class DegerlendirPage extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Hasat ID: ${harvest['id']}\n'
-                  'Bitki: ${harvest['plantName']}\n'
-                  'Kategori: ${harvest['categoryName']}\n'
-                  'Ekim Miktarı: ${harvest['plantingAmount']}',
+              'Hasat ID: ${widget.harvest['id']}\n'
+                  'Bitki: ${widget.harvest['plantName']}\n'
+                  'Kategori: ${widget.harvest['categoryName']}\n'
+                  'Ekim Miktarı: ${widget.harvest['plantingAmount']}',
               style: GoogleFonts.notoSans(fontSize: 16),
             ),
             const SizedBox(height: 20),
+            // Yorum Alanı
+            TextField(
+              controller: _commentController,
+              decoration: InputDecoration(
+                labelText: 'Yorum (Opsiyonel)',
+                border: OutlineInputBorder(),
+              ),
+              maxLines: 3,
+            ),
+            const SizedBox(height: 20),
+            // Puanlama Alanı
+            Text('Puan:'),
+            Slider(
+              value: _rating?.toDouble() ?? 0,
+              min: 0,
+              max: 5,
+              divisions: 5,
+              label: _rating?.toString(),
+              onChanged: (value) {
+                setState(() {
+                  _rating = value.toInt();
+                });
+              },
+            ),
+            const SizedBox(height: 20),
+            // Hasat Durumu Seçimi
+            Text('Hasat Durumu:'),
+            DropdownButton<String>(
+              value: _harvestStatus,
+              items: <String>['çok kötü', 'kötü', 'normal', 'iyi', 'çok iyi']
+                  .map<DropdownMenuItem<String>>((String value) {
+                return DropdownMenuItem<String>(
+                  value: value,
+                  child: Text(value),
+                );
+              }).toList(),
+              onChanged: (String? newValue) {
+                setState(() {
+                  _harvestStatus = newValue!;
+                });
+              },
+            ),
+            const SizedBox(height: 20),
+            // Değerlendirme Gönderme Butonu
             ElevatedButton(
               onPressed: () => _submitRating(context),
               child: const Text('Değerlendir'),
