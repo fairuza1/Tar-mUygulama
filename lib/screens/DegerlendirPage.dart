@@ -25,6 +25,14 @@ class _DegerlendirPageState extends State<DegerlendirPage> {
     'Zorluk': 3,
   };
 
+  final Map<String, String> categoryDescriptions = {
+    'Lezzet': 'Tüketici ya da üretici açısından ürünün tadı',
+    'Verimlilik': 'Beklenen ürün miktarına göre başarı durumu',
+    'Dayanıklılık': 'Hasat sonrası raf ömrü, bozulma durumu',
+    'Görünüm': 'Fiziksel bütünlük, renk, deformasyon durumu',
+    'Zorluk': 'Üretim sürecindeki zorluklar, uğraştırıcılık seviyesi',
+  };
+
   final Map<String, int> _statusMap = {
     'çok kötü': 1,
     'kötü': 2,
@@ -42,7 +50,7 @@ class _DegerlendirPageState extends State<DegerlendirPage> {
     '🐛 Zararlı istilası vardı',
     '☀️ Hava koşulları iyiydi',
     '🌬️ Rüzgar etkiliydi',
-    '🌧️ Aşırı yağmur vardı'
+    '🌧️ Aşırı yağmur vardı',
   ];
 
   Future<void> _submitRating(BuildContext context) async {
@@ -110,6 +118,22 @@ class _DegerlendirPageState extends State<DegerlendirPage> {
     );
   }
 
+  void _showCategoryInfo(String category) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(category, style: GoogleFonts.notoSans(fontWeight: FontWeight.bold)),
+        content: Text(categoryDescriptions[category] ?? '', style: GoogleFonts.notoSans()),
+        actions: [
+          TextButton(
+            child: const Text("Kapat"),
+            onPressed: () => Navigator.of(context).pop(),
+          )
+        ],
+      ),
+    );
+  }
+
   Widget _buildCategorySliders() {
     return Card(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
@@ -124,7 +148,16 @@ class _DegerlendirPageState extends State<DegerlendirPage> {
             ...categoryRatings.keys.map((category) => Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(category, style: GoogleFonts.notoSans()),
+                Row(
+                  children: [
+                    Text(category, style: GoogleFonts.notoSans(fontSize: 15)),
+                    const SizedBox(width: 5),
+                    IconButton(
+                      icon: const Icon(Icons.info_outline, size: 20, color: Colors.blueGrey),
+                      onPressed: () => _showCategoryInfo(category),
+                    )
+                  ],
+                ),
                 Slider(
                   value: categoryRatings[category]!.toDouble(),
                   min: 1,
@@ -168,25 +201,32 @@ class _DegerlendirPageState extends State<DegerlendirPage> {
   }
 
   Widget _buildTagSelector() {
-    return Wrap(
-      spacing: 8,
-      children: allTags.map((tag) {
-        final selected = selectedTags.contains(tag);
-        return FilterChip(
-          label: Text(tag, style: GoogleFonts.notoSans()),
-          selected: selected,
-          selectedColor: Colors.green.shade100,
-          onSelected: (val) {
-            setState(() {
-              if (val) {
-                selectedTags.add(tag);
-              } else {
-                selectedTags.remove(tag);
-              }
-            });
-          },
-        );
-      }).toList(),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text('🏷️ Etiketler (Durum Notları)', style: GoogleFonts.notoSans(fontSize: 16, fontWeight: FontWeight.bold)),
+        const SizedBox(height: 8),
+        Wrap(
+          spacing: 8,
+          children: allTags.map((tag) {
+            final selected = selectedTags.contains(tag);
+            return FilterChip(
+              label: Text(tag, style: GoogleFonts.notoSans()),
+              selected: selected,
+              selectedColor: Colors.green.shade100,
+              onSelected: (val) {
+                setState(() {
+                  if (val) {
+                    selectedTags.add(tag);
+                  } else {
+                    selectedTags.remove(tag);
+                  }
+                });
+              },
+            );
+          }).toList(),
+        ),
+      ],
     );
   }
 
@@ -201,6 +241,7 @@ class _DegerlendirPageState extends State<DegerlendirPage> {
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             _buildHarvestInfoCard(),
             const SizedBox(height: 20),
@@ -212,20 +253,17 @@ class _DegerlendirPageState extends State<DegerlendirPage> {
             const SizedBox(height: 20),
             _buildCommentField(),
             const SizedBox(height: 30),
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton.icon(
-                onPressed: () => _submitRating(context),
-                icon: const Icon(Icons.send),
-                label: Text('Değerlendirmeyi Gönder', style: GoogleFonts.notoSans()),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.green,
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  textStyle: const TextStyle(fontSize: 16),
+            ElevatedButton.icon(
+              onPressed: () => _submitRating(context),
+              icon: const Icon(Icons.send),
+              label: Text('Değerlendirmeyi Gönder', style: GoogleFonts.notoSans()),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.green,
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
                 ),
+                textStyle: const TextStyle(fontSize: 16),
               ),
             ),
           ],
