@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'screens/login.dart';
-import 'screens/DegerlendirPage.dart';
 import 'screens/DegerlendirmelerimiListelePage.dart';
 
 void main() {

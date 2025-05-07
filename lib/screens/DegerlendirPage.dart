@@ -14,11 +14,11 @@ class DegerlendirPage extends StatefulWidget {
 
 class _DegerlendirPageState extends State<DegerlendirPage> {
   final _commentController = TextEditingController();
-  int? _rating;
-  String _harvestStatus = 'normal'; // Varsayılan durum "normal"
+  int _rating = 0;
+  String _harvestStatus = 'normal';
 
   Future<void> _submitRating(BuildContext context) async {
-    final url = Uri.parse('http://10.0.2.2:8080/api/ratings'); // Emülatör için localhost
+    final url = Uri.parse('http://10.0.2.2:8080/api/ratings');
 
     try {
       final response = await http.post(
@@ -32,29 +32,113 @@ class _DegerlendirPageState extends State<DegerlendirPage> {
         }),
       );
 
-      print("🔁 Gönderilen harvest ID: ${widget.harvest['id']}");
-      print("📡 Durum Kodu: ${response.statusCode}");
-      print("📥 Cevap Gövdesi: ${response.body}");
-
       if (response.statusCode == 201) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('✅ Değerlendirme kaydedildi!')),
         );
         Navigator.pushReplacementNamed(context, '/degerlendirmeler');
       } else {
-        // Hata varsa mesajı göster
-        String errorMsg = 'Hata ${response.statusCode}: ${response.body}';
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(errorMsg)),
+          SnackBar(content: Text('Hata: ${response.body}')),
         );
       }
     } catch (e) {
-      // Ağ veya istek atılamama durumu
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('❌ İstek atılamadı: $e')),
+        SnackBar(content: Text('❌ Hata: $e')),
       );
-      print("🚫 Hata oluştu: $e");
     }
+  }
+
+  Widget _buildHarvestInfoCard() {
+    return Card(
+      elevation: 4,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Hasat Bilgileri', style: GoogleFonts.notoSans(fontSize: 18, fontWeight: FontWeight.bold)),
+            const Divider(),
+            Text('🌿 Bitki: ${widget.harvest['plantName']}', style: GoogleFonts.notoSans()),
+            Text('📦 Kategori: ${widget.harvest['categoryName']}', style: GoogleFonts.notoSans()),
+            Text('⚖️ Ekim Miktarı: ${widget.harvest['plantingAmount']}', style: GoogleFonts.notoSans()),
+            Text('🆔 Hasat ID: ${widget.harvest['id']}', style: GoogleFonts.notoSans(color: Colors.grey)),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCommentSection() {
+    return TextField(
+      controller: _commentController,
+      maxLines: 3,
+      decoration: InputDecoration(
+        labelText: '💬 Yorum (Opsiyonel)',
+        labelStyle: GoogleFonts.notoSans(),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+        filled: true,
+        fillColor: Colors.grey.shade100,
+      ),
+    );
+  }
+
+  Widget _buildRatingSlider() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text('⭐ Puan', style: GoogleFonts.notoSans(fontSize: 16, fontWeight: FontWeight.bold)),
+        SliderTheme(
+          data: SliderThemeData(
+            activeTrackColor: Colors.green,
+            inactiveTrackColor: Colors.green.shade100,
+            thumbColor: Colors.green,
+            overlayColor: Colors.green.withAlpha(32),
+            valueIndicatorColor: Colors.green,
+          ),
+          child: Slider(
+            value: _rating.toDouble(),
+            min: 1,
+            max: 5,
+            divisions: 5,
+            label: '$_rating',
+            onChanged: (value) {
+              setState(() {
+                _rating = value.toInt();
+              });
+            },
+          ),
+        ),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: List.generate(5, (i) => Icon(Icons.star, color: i < _rating ? Colors.amber : Colors.grey)),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildStatusDropdown() {
+    return DropdownButtonFormField<String>(
+      decoration: InputDecoration(
+        labelText: '🌾 Hasat Durumu',
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+        filled: true,
+        fillColor: Colors.grey.shade100,
+      ),
+      value: _harvestStatus,
+      items: ['çok kötü', 'kötü', 'normal', 'iyi', 'çok iyi'].map((value) {
+        return DropdownMenuItem(
+          value: value,
+          child: Text(value, style: GoogleFonts.notoSans()),
+        );
+      }).toList(),
+      onChanged: (value) {
+        setState(() {
+          _harvestStatus = value!;
+        });
+      },
+    );
   }
 
   @override
@@ -63,68 +147,35 @@ class _DegerlendirPageState extends State<DegerlendirPage> {
       appBar: AppBar(
         title: Text('Hasat Değerlendirme', style: GoogleFonts.notoSans()),
         backgroundColor: Colors.green,
+        centerTitle: true,
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(20),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              'Hasat ID: ${widget.harvest['id']}\n'
-                  'Bitki: ${widget.harvest['plantName']}\n'
-                  'Kategori: ${widget.harvest['categoryName']}\n'
-                  'Ekim Miktarı: ${widget.harvest['plantingAmount']}',
-              style: GoogleFonts.notoSans(fontSize: 16),
-            ),
+            _buildHarvestInfoCard(),
             const SizedBox(height: 20),
-            // Yorum Alanı
-            TextField(
-              controller: _commentController,
-              decoration: InputDecoration(
-                labelText: 'Yorum (Opsiyonel)',
-                border: OutlineInputBorder(),
+            _buildCommentSection(),
+            const SizedBox(height: 20),
+            _buildRatingSlider(),
+            const SizedBox(height: 20),
+            _buildStatusDropdown(),
+            const SizedBox(height: 30),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton.icon(
+                onPressed: () => _submitRating(context),
+                icon: const Icon(Icons.send),
+                label: Text('Değerlendirmeyi Gönder', style: GoogleFonts.notoSans()),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.green,
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  textStyle: const TextStyle(fontSize: 16),
+                ),
               ),
-              maxLines: 3,
-            ),
-            const SizedBox(height: 20),
-            // Puanlama Alanı
-            Text('Puan:'),
-            Slider(
-              value: _rating?.toDouble() ?? 0,
-              min: 0,
-              max: 5,
-              divisions: 5,
-              label: _rating?.toString(),
-              onChanged: (value) {
-                setState(() {
-                  _rating = value.toInt();
-                });
-              },
-            ),
-            const SizedBox(height: 20),
-            // Hasat Durumu Seçimi
-            Text('Hasat Durumu:'),
-            DropdownButton<String>(
-              value: _harvestStatus,
-              items: <String>['çok kötü', 'kötü', 'normal', 'iyi', 'çok iyi']
-                  .map<DropdownMenuItem<String>>((String value) {
-                return DropdownMenuItem<String>(
-                  value: value,
-                  child: Text(value),
-                );
-              }).toList(),
-              onChanged: (String? newValue) {
-                setState(() {
-                  _harvestStatus = newValue!;
-                });
-              },
-            ),
-            const SizedBox(height: 20),
-            // Değerlendirme Gönderme Butonu
-            ElevatedButton(
-              onPressed: () => _submitRating(context),
-              child: const Text('Değerlendir'),
-              style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
             ),
           ],
         ),
