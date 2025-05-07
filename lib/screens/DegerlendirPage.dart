@@ -1,3 +1,5 @@
+// ignore_for_file: use_build_context_synchronously
+
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -9,29 +11,54 @@ class DegerlendirPage extends StatefulWidget {
   const DegerlendirPage({Key? key, required this.harvest}) : super(key: key);
 
   @override
-  _DegerlendirPageState createState() => _DegerlendirPageState();
+  State<DegerlendirPage> createState() => _DegerlendirPageState();
 }
 
 class _DegerlendirPageState extends State<DegerlendirPage> {
   final _commentController = TextEditingController();
-  int _rating = 0;
+
+  Map<String, int> categoryRatings = {
+    'Lezzet': 3,
+    'Verimlilik': 3,
+    'Dayanıklılık': 3,
+    'Görünüm': 3,
+    'Zorluk': 3,
+  };
+
+  final Map<String, int> _statusMap = {
+    'çok kötü': 1,
+    'kötü': 2,
+    'normal': 3,
+    'iyi': 4,
+    'çok iyi': 5,
+  };
   String _harvestStatus = 'normal';
+  int _harvestStatusValue = 3;
+
+  List<String> selectedTags = [];
+  final List<String> allTags = [
+    '🌾 Toprak verimliydi',
+    '💧 Sulama sorunluydu',
+    '🐛 Zararlı istilası vardı',
+    '☀️ Hava koşulları iyiydi',
+    '🌬️ Rüzgar etkiliydi',
+    '🌧️ Aşırı yağmur vardı'
+  ];
 
   Future<void> _submitRating(BuildContext context) async {
     final url = Uri.parse('http://10.0.2.2:8080/api/ratings');
-
     try {
       final response = await http.post(
         url,
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
           'harvestId': widget.harvest['id'],
-          'rating': _rating,
           'comment': _commentController.text,
-          'harvestStatus': _harvestStatus,
+          'harvestStatus': _harvestStatusValue,
+          'categoryRatings': categoryRatings,
+          'tags': selectedTags,
         }),
       );
-
       if (response.statusCode == 201) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('✅ Değerlendirme kaydedildi!')),
@@ -51,10 +78,10 @@ class _DegerlendirPageState extends State<DegerlendirPage> {
 
   Widget _buildHarvestInfoCard() {
     return Card(
-      elevation: 4,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+      elevation: 5,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: Padding(
-        padding: const EdgeInsets.all(16.0),
+        padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -63,58 +90,56 @@ class _DegerlendirPageState extends State<DegerlendirPage> {
             Text('🌿 Bitki: ${widget.harvest['plantName']}', style: GoogleFonts.notoSans()),
             Text('📦 Kategori: ${widget.harvest['categoryName']}', style: GoogleFonts.notoSans()),
             Text('⚖️ Ekim Miktarı: ${widget.harvest['plantingAmount']}', style: GoogleFonts.notoSans()),
-            Text('🆔 Hasat ID: ${widget.harvest['id']}', style: GoogleFonts.notoSans(color: Colors.grey)),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildCommentSection() {
+  Widget _buildCommentField() {
     return TextField(
       controller: _commentController,
       maxLines: 3,
       decoration: InputDecoration(
-        labelText: '💬 Yorum (Opsiyonel)',
+        labelText: '💬 Yorum (opsiyonel)',
         labelStyle: GoogleFonts.notoSans(),
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
         filled: true,
         fillColor: Colors.grey.shade100,
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
       ),
     );
   }
 
-  Widget _buildRatingSlider() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text('⭐ Puan', style: GoogleFonts.notoSans(fontSize: 16, fontWeight: FontWeight.bold)),
-        SliderTheme(
-          data: SliderThemeData(
-            activeTrackColor: Colors.green,
-            inactiveTrackColor: Colors.green.shade100,
-            thumbColor: Colors.green,
-            overlayColor: Colors.green.withAlpha(32),
-            valueIndicatorColor: Colors.green,
-          ),
-          child: Slider(
-            value: _rating.toDouble(),
-            min: 1,
-            max: 5,
-            divisions: 5,
-            label: '$_rating',
-            onChanged: (value) {
-              setState(() {
-                _rating = value.toInt();
-              });
-            },
-          ),
+  Widget _buildCategorySliders() {
+    return Card(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      elevation: 4,
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('📊 Kategori Bazlı Puanlama', style: GoogleFonts.notoSans(fontSize: 16, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 10),
+            ...categoryRatings.keys.map((category) => Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(category, style: GoogleFonts.notoSans()),
+                Slider(
+                  value: categoryRatings[category]!.toDouble(),
+                  min: 1,
+                  max: 5,
+                  divisions: 4,
+                  label: categoryRatings[category].toString(),
+                  onChanged: (val) {
+                    setState(() => categoryRatings[category] = val.toInt());
+                  },
+                ),
+              ],
+            ))
+          ],
         ),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: List.generate(5, (i) => Icon(Icons.star, color: i < _rating ? Colors.amber : Colors.grey)),
-        ),
-      ],
+      ),
     );
   }
 
@@ -127,17 +152,41 @@ class _DegerlendirPageState extends State<DegerlendirPage> {
         fillColor: Colors.grey.shade100,
       ),
       value: _harvestStatus,
-      items: ['çok kötü', 'kötü', 'normal', 'iyi', 'çok iyi'].map((value) {
-        return DropdownMenuItem(
-          value: value,
-          child: Text(value, style: GoogleFonts.notoSans()),
+      items: _statusMap.keys.map((label) {
+        return DropdownMenuItem<String>(
+          value: label,
+          child: Text(label, style: GoogleFonts.notoSans()),
         );
       }).toList(),
       onChanged: (value) {
         setState(() {
           _harvestStatus = value!;
+          _harvestStatusValue = _statusMap[value]!;
         });
       },
+    );
+  }
+
+  Widget _buildTagSelector() {
+    return Wrap(
+      spacing: 8,
+      children: allTags.map((tag) {
+        final selected = selectedTags.contains(tag);
+        return FilterChip(
+          label: Text(tag, style: GoogleFonts.notoSans()),
+          selected: selected,
+          selectedColor: Colors.green.shade100,
+          onSelected: (val) {
+            setState(() {
+              if (val) {
+                selectedTags.add(tag);
+              } else {
+                selectedTags.remove(tag);
+              }
+            });
+          },
+        );
+      }).toList(),
     );
   }
 
@@ -155,11 +204,13 @@ class _DegerlendirPageState extends State<DegerlendirPage> {
           children: [
             _buildHarvestInfoCard(),
             const SizedBox(height: 20),
-            _buildCommentSection(),
+            _buildCategorySliders(),
             const SizedBox(height: 20),
-            _buildRatingSlider(),
+            _buildTagSelector(),
             const SizedBox(height: 20),
             _buildStatusDropdown(),
+            const SizedBox(height: 20),
+            _buildCommentField(),
             const SizedBox(height: 30),
             SizedBox(
               width: double.infinity,

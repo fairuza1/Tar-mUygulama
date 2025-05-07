@@ -14,6 +14,14 @@ class _DegerlendermelerimiListelePageState
     extends State<DegerlendirmelerimiListelePage> {
   List<dynamic> ratings = [];
 
+  final Map<int, String> _statusTextMap = {
+    5: 'Çok İyi',
+    4: 'İyi',
+    3: 'Normal',
+    2: 'Kötü',
+    1: 'Çok Kötü',
+  };
+
   @override
   void initState() {
     super.initState();
@@ -37,6 +45,13 @@ class _DegerlendermelerimiListelePageState
   }
 
   Widget buildRatingCard(dynamic rating) {
+    final dynamic rawStatus = rating['harvestStatus'];
+    final int? statusValue = rawStatus is int
+        ? rawStatus
+        : int.tryParse(rawStatus.toString());
+
+    final String statusText = _statusTextMap[statusValue] ?? 'Durum belirtilmemiş';
+
     return Card(
       elevation: 5,
       margin: const EdgeInsets.symmetric(vertical: 10, horizontal: 16),
@@ -76,10 +91,10 @@ class _DegerlendermelerimiListelePageState
             ),
             const SizedBox(height: 6),
             Text(
-              "🌾 Hasat Durumu: ${rating['harvestStatus'] ?? 'Durum belirtilmemiş'}",
+              "🌾 Hasat Durumu: $statusText",
               style: TextStyle(
                 fontSize: 15,
-                color: _getStatusColor(rating['harvestStatus']),
+                color: _getStatusColor(statusText),
               ),
             ),
           ],
