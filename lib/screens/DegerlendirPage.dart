@@ -16,6 +16,7 @@ class DegerlendirPage extends StatefulWidget {
 
 class _DegerlendirPageState extends State<DegerlendirPage> {
   final _commentController = TextEditingController();
+  final _amountController = TextEditingController(); // Ürün miktarı için
 
   Map<String, int> categoryRatings = {
     'Lezzet': 3,
@@ -65,6 +66,7 @@ class _DegerlendirPageState extends State<DegerlendirPage> {
           'harvestStatus': _harvestStatusValue,
           'categoryRatings': categoryRatings,
           'tags': selectedTags,
+          'amount': double.tryParse(_amountController.text) ?? 0,
         }),
       );
       if (response.statusCode == 201) {
@@ -100,6 +102,20 @@ class _DegerlendirPageState extends State<DegerlendirPage> {
             Text('⚖️ Ekim Miktarı: ${widget.harvest['plantingAmount']}', style: GoogleFonts.notoSans()),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildAmountField() {
+    return TextField(
+      controller: _amountController,
+      keyboardType: TextInputType.numberWithOptions(decimal: true),
+      decoration: InputDecoration(
+        labelText: '⚖️ Ürün Miktarı (kg)',
+        labelStyle: GoogleFonts.notoSans(),
+        filled: true,
+        fillColor: Colors.grey.shade100,
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
       ),
     );
   }
@@ -244,6 +260,8 @@ class _DegerlendirPageState extends State<DegerlendirPage> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             _buildHarvestInfoCard(),
+            const SizedBox(height: 20),
+            _buildAmountField(), // 👈 Ürün miktarı girişi
             const SizedBox(height: 20),
             _buildCategorySliders(),
             const SizedBox(height: 20),

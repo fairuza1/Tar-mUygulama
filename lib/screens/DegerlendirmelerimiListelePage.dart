@@ -7,12 +7,14 @@ class DegerlendirmelerimiListelePage extends StatefulWidget {
 
   @override
   State<DegerlendirmelerimiListelePage> createState() =>
-      _DegerlendermelerimiListelePageState();
+      _DegerlendirmelerimiListelePageState();
 }
 
-class _DegerlendermelerimiListelePageState
+class _DegerlendirmelerimiListelePageState
     extends State<DegerlendirmelerimiListelePage> {
   List<dynamic> ratings = [];
+  bool isLoading = true;
+  String errorMessage = '';
 
   final Map<int, String> _statusTextMap = {
     5: 'Çok İyi',
@@ -31,16 +33,25 @@ class _DegerlendermelerimiListelePageState
   Future<void> fetchRatings() async {
     final url = Uri.parse('http://10.0.2.2:8080/api/ratings');
 
-    final response = await http.get(url);
+    try {
+      final response = await http.get(url);
 
-    if (response.statusCode == 200) {
+      if (response.statusCode == 200) {
+        setState(() {
+          ratings = jsonDecode(response.body);
+          isLoading = false;
+        });
+      } else {
+        setState(() {
+          errorMessage = '❌ Değerlendirmeler alınamadı';
+          isLoading = false;
+        });
+      }
+    } catch (e) {
       setState(() {
-        ratings = jsonDecode(response.body);
+        errorMessage = '❌ Hata oluştu: $e';
+        isLoading = false;
       });
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("❌ Değerlendirmeler alınamadı")),
-      );
     }
   }
 
@@ -50,7 +61,26 @@ class _DegerlendermelerimiListelePageState
         ? rawStatus
         : int.tryParse(rawStatus.toString());
 
-    final String statusText = _statusTextMap[statusValue] ?? 'Durum belirtilmemiş';
+    final String statusText =
+        _statusTextMap[statusValue] ?? 'Durum belirtilmemiş';
+
+    final dynamic amount = rating['amount'] ?? 'Belirtilmemiş';
+
+    final dynamic yieldValue = rating['yieldPerSquareMeter'];
+    final String yieldText = (yieldValue != null)
+        ? "${(yieldValue as num).toStringAsFixed(2)} kg/m²"
+        : "Hesaplanamadı";
+
+    Color yieldColor;
+    if (yieldValue == null) {
+      yieldColor = Colors.grey;
+    } else if (yieldValue >= 1.5) {
+      yieldColor = Colors.green;
+    } else if (yieldValue >= 1.0) {
+      yieldColor = Colors.orange;
+    } else {
+      yieldColor = Colors.redAccent;
+    }
 
     return Card(
       elevation: 5,
@@ -97,6 +127,16 @@ class _DegerlendermelerimiListelePageState
                 color: _getStatusColor(statusText),
               ),
             ),
+            const SizedBox(height: 6),
+            Text(
+              "📦 Ürün Miktarı: $amount",
+              style: const TextStyle(fontSize: 15),
+            ),
+            const SizedBox(height: 6),
+            Text(
+              "📏 m² Başına Ürün Verimi: $yieldText",
+              style: TextStyle(fontSize: 15, color: yieldColor),
+            ),
           ],
         ),
       ),
@@ -128,8 +168,13 @@ class _DegerlendermelerimiListelePageState
         backgroundColor: Colors.green,
         centerTitle: true,
       ),
-      body: ratings.isEmpty
+      body: isLoading
           ? const Center(child: CircularProgressIndicator())
+          : ratings.isEmpty
+          ? Center(
+          child: Text(errorMessage,
+              style:
+              const TextStyle(fontSize: 16, color: Colors.red)))
           : ListView.builder(
         itemCount: ratings.length,
         itemBuilder: (context, index) {
