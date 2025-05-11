@@ -111,7 +111,7 @@ class _DegerlendirmelerimiListelePageState
             ),
             const SizedBox(height: 6),
             Text(
-              "⭐ Puan: ${rating['rating'] ?? 'Belirtilmemiş'}",
+              "⭐ Puan: ${rating['totalScore'] ?? 'Belirtilmemiş'}",
               style: const TextStyle(fontSize: 15),
             ),
             const SizedBox(height: 6),
