@@ -38,7 +38,8 @@ class _DegerlendirmelerimiListelePageState
 
       if (response.statusCode == 200) {
         setState(() {
-          ratings = jsonDecode(response.body);
+          // UTF-8 karakter çözümlemesi
+          ratings = jsonDecode(utf8.decode(response.bodyBytes));
           isLoading = false;
         });
       } else {
@@ -91,6 +92,7 @@ class _DegerlendirmelerimiListelePageState
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // Başlık
             Row(
               children: [
                 const Icon(Icons.agriculture, color: Colors.green),
@@ -105,38 +107,65 @@ class _DegerlendirmelerimiListelePageState
               ],
             ),
             const SizedBox(height: 8),
-            Text(
-              "🆔 Değerlendirme ID: ${rating['id']}",
-              style: const TextStyle(color: Colors.grey),
-            ),
+
+            // Genel bilgiler
+            Text("🆔 Değerlendirme ID: ${rating['id']}",
+                style: const TextStyle(color: Colors.grey)),
             const SizedBox(height: 6),
-            Text(
-              "⭐ Puan: ${rating['totalScore'] ?? 'Belirtilmemiş'}",
-              style: const TextStyle(fontSize: 15),
-            ),
-            const SizedBox(height: 6),
+            Text("🌱 Bitki Adı: ${rating['plantName'] ?? 'Bilinmiyor'}",
+                style: const TextStyle(fontSize: 15)),
+            Text("📅 Ekim Tarihi: ${rating['plantingDate'] ?? 'Belirtilmemiş'}",
+                style: const TextStyle(fontSize: 15)),
+            Text("🧪 Ekim Yöntemi: ${rating['plantingMethod'] ?? 'Belirtilmemiş'}",
+                style: const TextStyle(fontSize: 15)),
+            const Divider(height: 16, thickness: 1),
+            Text("📍 Arazi: ${rating['landName'] ?? 'Belirtilmemiş'} (${rating['landSize']} m²)",
+                style: const TextStyle(fontSize: 15)),
+            Text("📌 Konum: ${rating['landLocation'] ?? 'Bilinmiyor'}",
+                style: const TextStyle(fontSize: 15)),
+
+            const Divider(height: 16, thickness: 1),
+
+            // Değerlendirme bilgileri
+            Text("⭐ Puan: ${rating['totalScore'] ?? 'Belirtilmemiş'}",
+                style: const TextStyle(fontSize: 15)),
             Text(
               "💬 Yorum: ${rating['comment']?.trim().isNotEmpty == true ? rating['comment'] : 'Yorum yok'}",
               style: const TextStyle(fontSize: 15),
             ),
-            const SizedBox(height: 6),
-            Text(
-              "🌾 Hasat Durumu: $statusText",
-              style: TextStyle(
-                fontSize: 15,
-                color: _getStatusColor(statusText),
+            Text("🌾 Hasat Durumu: $statusText",
+                style: TextStyle(fontSize: 15, color: _getStatusColor(statusText))),
+            Text("📦 Ürün Miktarı: $amount", style: const TextStyle(fontSize: 15)),
+            Text("📏 m² Başına Verim: $yieldText",
+                style: TextStyle(fontSize: 15, color: yieldColor)),
+
+            const SizedBox(height: 10),
+
+            // Etiketler
+            if (rating['tags'] != null && rating['tags'].isNotEmpty)
+              Wrap(
+                spacing: 8,
+                runSpacing: 4,
+                children: List<Widget>.from(
+                  (rating['tags'] as List<dynamic>).map((tag) => Chip(label: Text(tag))),
+                ),
               ),
-            ),
-            const SizedBox(height: 6),
-            Text(
-              "📦 Ürün Miktarı: $amount",
-              style: const TextStyle(fontSize: 15),
-            ),
-            const SizedBox(height: 6),
-            Text(
-              "📏 m² Başına Ürün Verimi: $yieldText",
-              style: TextStyle(fontSize: 15, color: yieldColor),
-            ),
+
+            const SizedBox(height: 8),
+
+            // Kategori Bazlı Puanlar
+            if (rating['categoryRatings'] != null)
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text("📊 Kategori Puanları:",
+                      style: TextStyle(fontWeight: FontWeight.bold)),
+                  const SizedBox(height: 4),
+                  ...((rating['categoryRatings'] as Map<String, dynamic>).entries.map((entry) {
+                    return Text("🔸 ${entry.key}: ${entry.value}/5");
+                  })),
+                ],
+              ),
           ],
         ),
       ),
