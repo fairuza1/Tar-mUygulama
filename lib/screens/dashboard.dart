@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:uygulamam_flutter/screens/OneriSayfasi.dart';
 import 'AraziEklePage.dart';
 import 'ArazilerimiGosterPage.dart';
 import 'EkimYapPage.dart';
@@ -126,6 +127,8 @@ class Dashboard extends StatelessWidget {
                           HasatlarimiGosterPage()),
                       makeDashboardItem(context, "Değerlendirmelerimi Listele", Icons.list_alt,
                           DegerlendirmelerimiListelePage()),
+                      makeDashboardItem(context, "öneri", Icons.list_alt,
+                          OneriSayfasi()),
                     ],
                   ),
                 ),
