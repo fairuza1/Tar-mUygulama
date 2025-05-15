@@ -49,7 +49,7 @@ class ArazilerDashboardPage extends StatelessWidget {
             // Üst Panel
             Container(
               padding: const EdgeInsets.all(20),
-              color: const Color(0xFF2E7D32),
+              color: const Color(0xFF228B22),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -62,22 +62,41 @@ class ArazilerDashboardPage extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 10),
-                  FutureBuilder<int>(
-                    future: fetchTotalLandCount(),
-                    builder: (context, snapshot) {
-                      if (snapshot.connectionState == ConnectionState.waiting) {
-                        return const CircularProgressIndicator(color: Colors.white);
-                      } else if (snapshot.hasError) {
-                        return Text('Hata oluştu', style: const TextStyle(color: Colors.white));
-                      } else {
-                        return Text(
-                          'Toplam Arazi Sayısı: ${snapshot.data}',
-                          style: const TextStyle(color: Colors.white70, fontSize: 18),
-                        );
-                      }
-                    },
+
+                  /// Ortalanmış ve kalın şekilde toplam arazi sayısı
+                  Center(
+                    child: FutureBuilder<int>(
+                      future: fetchTotalLandCount(),
+                      builder: (context, snapshot) {
+                        if (snapshot.connectionState == ConnectionState.waiting) {
+                          return const CircularProgressIndicator(color: Colors.white);
+                        } else if (snapshot.hasError) {
+                          return const Text('Hata oluştu', style: TextStyle(color: Colors.white));
+                        } else {
+                          return Column(
+                            children: [
+                              const Text(
+                                'Toplam Arazi Sayısı',
+                                style: TextStyle(color: Colors.white70),
+                              ),
+                              const SizedBox(height: 8),
+                              Text(
+                                '${snapshot.data} Arazi',
+                                style: const TextStyle(
+                                  fontSize: 28,
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ],
+                          );
+                        }
+                      },
+                    ),
                   ),
+
                   const SizedBox(height: 20),
+
                   // İşlem Butonları
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceAround,
