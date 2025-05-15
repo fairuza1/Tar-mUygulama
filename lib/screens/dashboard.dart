@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http; // <-- EKLENDİ
 import 'package:uygulamam_flutter/screens/ArazilerDashboardPage.dart';
+import 'package:uygulamam_flutter/screens/EkimlerDashboardPage.dart';
 import 'dart:convert';
 
 import 'AraziEklePage.dart';
@@ -128,6 +129,8 @@ class Dashboard extends StatelessWidget {
                       _buildActionButton(context, Icons.grass, "Hasatlarım", HasatlarimiGosterPage()),
                       _buildActionButton(context, Icons.list_alt, "Değerlendirmeler", DegerlendirmelerimiListelePage()),
                       _buildActionButton(context, Icons.recommend, "Öneriler", OneriSayfasi()),
+                      _buildActionButton(context, Icons.recommend, "ekimler", EkimlerDashboardPage()),
+
                       const SizedBox(width: 48),
                     ],
                   ),
