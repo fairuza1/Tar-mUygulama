@@ -7,8 +7,27 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'EkimYapPage.dart';
 import 'EkimlerimiGosterPage.dart';
 
-class EkimlerDashboardPage extends StatelessWidget {
+class EkimlerDashboardPage extends StatefulWidget {
   const EkimlerDashboardPage({Key? key}) : super(key: key);
+
+  @override
+  State<EkimlerDashboardPage> createState() => _EkimlerDashboardPageState();
+}
+
+class _EkimlerDashboardPageState extends State<EkimlerDashboardPage> {
+  late Future<double> _totalAreaFuture;
+  late Future<List<Map<String, dynamic>>> _recentSowingsFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadData();
+  }
+
+  void _loadData() {
+    _totalAreaFuture = fetchTotalCultivatedArea();
+    _recentSowingsFuture = fetchRecentSowings();
+  }
 
   Future<int?> _getUserId() async {
     final prefs = await SharedPreferences.getInstance();
@@ -50,8 +69,11 @@ class EkimlerDashboardPage extends StatelessWidget {
 
   Widget _buildActionCard(BuildContext context, IconData icon, String label, Widget page) {
     return GestureDetector(
-      onTap: () {
-        Navigator.push(context, MaterialPageRoute(builder: (_) => page));
+      onTap: () async {
+        await Navigator.push(context, MaterialPageRoute(builder: (_) => page));
+        setState(() {
+          _loadData(); // Sayfa geri dönünce verileri yenile
+        });
       },
       child: Card(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
@@ -158,7 +180,7 @@ class EkimlerDashboardPage extends StatelessWidget {
                     ),
                     const SizedBox(height: 8),
                     FutureBuilder<double>(
-                      future: fetchTotalCultivatedArea(),
+                      future: _totalAreaFuture,
                       builder: (context, snapshot) {
                         if (snapshot.connectionState == ConnectionState.waiting) {
                           return const CircularProgressIndicator(color: Colors.white);
@@ -187,21 +209,37 @@ class EkimlerDashboardPage extends StatelessWidget {
                 ),
               ),
 
+              // Son Ekimler Başlık + "..." Butonu
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 10),
-                child: Align(
-                  alignment: Alignment.centerLeft,
-                  child: Text(
-                    "Son Ekimler",
-                    style: GoogleFonts.poppins(
-                      fontSize: 20,
-                      color: Colors.white,
-                      fontWeight: FontWeight.w600,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      "Son Ekimler",
+                      style: GoogleFonts.poppins(
+                        fontSize: 20,
+                        color: Colors.white,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
-                  ),
+                    IconButton(
+                      icon: const Icon(Icons.more_horiz, color: Colors.white),
+                      onPressed: () async {
+                        await Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (context) => const EkimlerimiGosterPage()),
+                        );
+                        setState(() {
+                          _loadData(); // Geri dönünce verileri yenile
+                        });
+                      },
+                    ),
+                  ],
                 ),
               ),
 
+              // Liste
               Expanded(
                 child: Container(
                   decoration: const BoxDecoration(
@@ -209,7 +247,7 @@ class EkimlerDashboardPage extends StatelessWidget {
                     borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
                   ),
                   child: FutureBuilder<List<Map<String, dynamic>>>(
-                    future: fetchRecentSowings(),
+                    future: _recentSowingsFuture,
                     builder: (context, snapshot) {
                       if (snapshot.connectionState == ConnectionState.waiting) {
                         return const Center(child: CircularProgressIndicator());

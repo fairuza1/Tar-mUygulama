@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'screens/login.dart';
 import 'screens/DegerlendirmelerimiListelePage.dart';
+import 'screens/EkimlerDashboardPage.dart';
 
 void main() {
   runApp(MaterialApp(
@@ -8,7 +9,7 @@ void main() {
     home: Login(),
     routes: {
       '/degerlendirmeler': (context) => const DegerlendirmelerimiListelePage(),
-      // Eğer istersen Değerlendir sayfası için de route ekleyebiliriz
+      '/dashboard': (context) => const EkimlerDashboardPage(),
     },
   ));
 }
