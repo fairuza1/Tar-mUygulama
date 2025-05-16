@@ -24,7 +24,6 @@ class EkimlerDashboardPage extends StatelessWidget {
     );
 
     if (response.statusCode == 200) {
-      // UTF-8 decode ile stringe dönüştür
       final decodedBody = utf8.decode(response.bodyBytes);
       return double.tryParse(decodedBody) ?? 0.0;
     } else {
@@ -84,6 +83,8 @@ class EkimlerDashboardPage extends StatelessWidget {
   }
 
   Widget _buildRecentSowingCard(Map<String, dynamic> sowing) {
+    bool isHarvested = sowing['status'] == 'HARVESTED';
+
     return Card(
       margin: const EdgeInsets.symmetric(vertical: 6, horizontal: 12),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -97,6 +98,32 @@ class EkimlerDashboardPage extends StatelessWidget {
         subtitle: Text(
           'Tarih: ${sowing['sowingDate']}\nMiktar: ${sowing['plantingAmount']} kg',
           style: GoogleFonts.poppins(fontSize: 13),
+        ),
+        trailing: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+          decoration: BoxDecoration(
+            color: isHarvested ? Colors.red.shade50 : Colors.green.shade50,
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                isHarvested ? Icons.trending_down : Icons.trending_up,
+                color: isHarvested ? Colors.red : Colors.green,
+                size: 20,
+              ),
+              const SizedBox(width: 6),
+              Text(
+                isHarvested ? "Hasat Edildi" : "Ekildi",
+                style: GoogleFonts.poppins(
+                  fontSize: 13,
+                  color: isHarvested ? Colors.red : Colors.green,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -116,7 +143,6 @@ class EkimlerDashboardPage extends StatelessWidget {
         child: SafeArea(
           child: Column(
             children: [
-              // Üst Panel
               Padding(
                 padding: const EdgeInsets.all(20),
                 child: Column(
@@ -150,7 +176,6 @@ class EkimlerDashboardPage extends StatelessWidget {
                       },
                     ),
                     const SizedBox(height: 20),
-                    // İşlem Butonları
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                       children: [
@@ -162,7 +187,6 @@ class EkimlerDashboardPage extends StatelessWidget {
                 ),
               ),
 
-              // Son İşlemler Başlık
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 10),
                 child: Align(
@@ -178,7 +202,6 @@ class EkimlerDashboardPage extends StatelessWidget {
                 ),
               ),
 
-              // Son İşlemler Listesi
               Expanded(
                 child: Container(
                   decoration: const BoxDecoration(
