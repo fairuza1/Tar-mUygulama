@@ -105,7 +105,7 @@ class _EkimlerDashboardPageState extends State<EkimlerDashboardPage> {
   }
 
   Widget _buildRecentSowingCard(Map<String, dynamic> sowing) {
-    bool isHarvested = sowing['status'] == 'HARVESTED';
+    bool isHarvested = sowing['harvested'] ?? false;
 
     return Card(
       margin: const EdgeInsets.symmetric(vertical: 6, horizontal: 12),
@@ -208,7 +208,6 @@ class _EkimlerDashboardPageState extends State<EkimlerDashboardPage> {
                   ],
                 ),
               ),
-
               // Son Ekimler Başlık + "..." Butonu
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 10),
@@ -238,7 +237,6 @@ class _EkimlerDashboardPageState extends State<EkimlerDashboardPage> {
                   ],
                 ),
               ),
-
               // Liste
               Expanded(
                 child: Container(
