@@ -1,11 +1,33 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'dart:convert';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
 import 'AraziEklePage.dart';
 import 'ArazilerimiGosterPage.dart';
 
-class ArazilerDashboardPage extends StatelessWidget {
+class ArazilerDashboardPage extends StatefulWidget {
   const ArazilerDashboardPage({Key? key}) : super(key: key);
+
+  @override
+  State<ArazilerDashboardPage> createState() => _ArazilerDashboardPageState();
+}
+
+class _ArazilerDashboardPageState extends State<ArazilerDashboardPage> {
+  late Future<int> totalLandCountFuture;
+  late Future<List<Map<String, dynamic>>> last5LandsFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    _refreshData();
+  }
+
+  void _refreshData() {
+    totalLandCountFuture = fetchTotalLandCount();
+    last5LandsFuture = fetchLast5Lands();
+  }
 
   Future<int> fetchTotalLandCount() async {
     final response = await http.get(Uri.parse('http://10.0.2.2:8080/lands/count'));
@@ -16,10 +38,33 @@ class ArazilerDashboardPage extends StatelessWidget {
     }
   }
 
+  Future<List<Map<String, dynamic>>> fetchLast5Lands() async {
+    final prefs = await SharedPreferences.getInstance();
+    final userId = prefs.getInt('userId');
+
+    if (userId == null) {
+      throw Exception('Kullanıcı ID\'si bulunamadı.');
+    }
+
+    final response = await http.get(
+      Uri.parse('http://10.0.2.2:8080/lands/last5?userId=$userId'),
+    );
+
+    if (response.statusCode == 200) {
+      final List<dynamic> data = json.decode(utf8.decode(response.bodyBytes));
+      return data.cast<Map<String, dynamic>>();
+    } else {
+      throw Exception('Son 5 arazi verisi alınamadı');
+    }
+  }
+
   Widget _buildActionButton(BuildContext context, IconData icon, String label, Widget page) {
     return InkWell(
-      onTap: () {
-        Navigator.push(context, MaterialPageRoute(builder: (_) => page));
+      onTap: () async {
+        await Navigator.push(context, MaterialPageRoute(builder: (_) => page));
+        setState(() {
+          _refreshData(); // Sayfaya geri dönüldüğünde verileri yenile
+        });
       },
       child: Column(
         children: [
@@ -62,11 +107,9 @@ class ArazilerDashboardPage extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 10),
-
-                  /// Ortalanmış ve kalın şekilde toplam arazi sayısı
                   Center(
                     child: FutureBuilder<int>(
-                      future: fetchTotalLandCount(),
+                      future: totalLandCountFuture,
                       builder: (context, snapshot) {
                         if (snapshot.connectionState == ConnectionState.waiting) {
                           return const CircularProgressIndicator(color: Colors.white);
@@ -94,10 +137,7 @@ class ArazilerDashboardPage extends StatelessWidget {
                       },
                     ),
                   ),
-
                   const SizedBox(height: 20),
-
-                  // İşlem Butonları
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceAround,
                     children: [
@@ -109,13 +149,89 @@ class ArazilerDashboardPage extends StatelessWidget {
               ),
             ),
 
-            // Açıklama
-            const Expanded(
-              child: Center(
-                child: Text(
-                  'Arazilerinizi ekleyebilir, görüntüleyebilir, güncelleyebilir veya silebilirsiniz.',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
-                  textAlign: TextAlign.center,
+            // Alt Panel: Son 5 Arazi
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    const Text(
+                      'Son eklenen araziler',
+                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                    ),
+                    const SizedBox(height: 8),
+                    Expanded(
+                      child: FutureBuilder<List<Map<String, dynamic>>>(
+                        future: last5LandsFuture,
+                        builder: (context, snapshot) {
+                          if (snapshot.connectionState == ConnectionState.waiting) {
+                            return const Center(child: CircularProgressIndicator());
+                          } else if (snapshot.hasError) {
+                            return Center(child: Text('Veriler alınamadı: ${snapshot.error}'));
+                          } else if (snapshot.data!.isEmpty) {
+                            return const Center(child: Text('Hiç arazi bulunamadı.'));
+                          } else {
+                            return ListView.builder(
+                              itemCount: snapshot.data!.length,
+                              itemBuilder: (context, index) {
+                                final land = snapshot.data![index];
+
+                                final imageUrl = land['photoPath'] != null && land['photoPath'] != ''
+                                    ? 'http://10.0.2.2:8080/lands/photo/${land['photoPath']}'
+                                    : 'assets/images/DefaultImage.jpg';
+
+                                return Card(
+                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                  elevation: 3,
+                                  margin: const EdgeInsets.symmetric(vertical: 8),
+                                  child: ListTile(
+                                    leading: ClipRRect(
+                                      borderRadius: BorderRadius.circular(8),
+                                      child: imageUrl.startsWith('http')
+                                          ? Image.network(
+                                        imageUrl,
+                                        width: 70,
+                                        height: 70,
+                                        fit: BoxFit.cover,
+                                        errorBuilder: (context, error, stackTrace) =>
+                                        const Icon(Icons.image_not_supported),
+                                      )
+                                          : Image.asset(
+                                        imageUrl,
+                                        width: 70,
+                                        height: 70,
+                                        fit: BoxFit.cover,
+                                      ),
+                                    ),
+                                    title: Text(
+                                      land['name'] ?? 'Bilinmeyen Arazi',
+                                      style: const TextStyle(fontWeight: FontWeight.bold),
+                                    ),
+                                    subtitle: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          '${land['city'] ?? 'Şehir bilinmiyor'} - '
+                                              '${land['district'] ?? 'İlçe bilinmiyor'} - '
+                                              '${land['village'] ?? 'Mahalle bilinmiyor'}',
+                                        ),
+                                        const SizedBox(height: 4),
+                                        Text(
+                                          'Büyüklük:  ${land['landSize'] ?? 'Bilinmiyor'} m²',
+                                          style: const TextStyle(color: Colors.grey),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                );
+                              },
+                            );
+                          }
+                        },
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ),
