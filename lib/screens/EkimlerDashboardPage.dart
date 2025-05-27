@@ -112,7 +112,18 @@ class _EkimlerDashboardPageState extends State<EkimlerDashboardPage> {
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       elevation: 3,
       child: ListTile(
-        leading: const Icon(Icons.local_florist, color: Colors.green),
+        leading: ClipRRect(
+          borderRadius: BorderRadius.circular(8),
+          child: Image.asset(
+            'assets/images/${sowing['plantName'].toString().toLowerCase()}.jpg',
+            width: 48,
+            height: 48,
+            fit: BoxFit.cover,
+            errorBuilder: (context, error, stackTrace) {
+              return const Icon(Icons.image_not_supported, size: 40, color: Colors.grey);
+            },
+          ),
+        ),
         title: Text(
           sowing['plantName'],
           style: GoogleFonts.poppins(fontWeight: FontWeight.w600),
