@@ -207,6 +207,18 @@ class _EkimlerimiGosterPageState extends State<EkimlerimiGosterPage> {
             return Card(
               margin: const EdgeInsets.symmetric(vertical: 8),
               child: ListTile(
+                leading: ClipRRect(
+                  borderRadius: BorderRadius.circular(8),
+                  child: Image.asset(
+                    'assets/images/${sowing['plantName'].toString().toLowerCase()}.jpg',
+                    width: 60,
+                    height: 60,
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) {
+                      return const Icon(Icons.image_not_supported, size: 48, color: Colors.grey);
+                    },
+                  ),
+                ),
                 title: Text(
                   '${sowing['plantName']} (${sowing['categoryName']})',
                   style: GoogleFonts.notoSans(fontWeight: FontWeight.bold),
@@ -215,15 +227,13 @@ class _EkimlerimiGosterPageState extends State<EkimlerimiGosterPage> {
                   'Ekim Tarihi: ${sowing['sowingDate']} \nArazi: ${sowing['landName']} \nMiktar: ${sowing['plantingAmount']} \nKalan Alan: $remainingSize m²',
                   style: GoogleFonts.notoSans(),
                 ),
+                isThreeLine: true,
                 trailing: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    // Hasat Et butonu
                     Expanded(
                       child: ElevatedButton(
-                        onPressed: isHarvested
-                            ? null
-                            : () => _harvestSowing(sowing['id']),
+                        onPressed: isHarvested ? null : () => _harvestSowing(sowing['id']),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: isHarvested ? Colors.grey : Colors.green,
                         ),
@@ -234,7 +244,6 @@ class _EkimlerimiGosterPageState extends State<EkimlerimiGosterPage> {
                       ),
                     ),
                     const SizedBox(height: 8),
-                    // Sil butonu
                     Expanded(
                       child: ElevatedButton(
                         onPressed: () => _deleteSowing(sowing['id']),
