@@ -132,6 +132,21 @@ class _OneriSayfasiState extends State<OneriSayfasi> {
     );
   }
 
+  String _plantNameToImagePath(String plantName) {
+    // Türkçe karakterleri sadeleştir, boşlukları kaldır, küçük harfe çevir
+    String cleaned = plantName
+        .toLowerCase()
+        .replaceAll(' ', '')
+        .replaceAll('ç', 'c')
+        .replaceAll('ğ', 'g')
+        .replaceAll('ı', 'i')
+        .replaceAll('ö', 'o')
+        .replaceAll('ş', 's')
+        .replaceAll('ü', 'u');
+
+    return 'assets/images/$cleaned.jpg';
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -197,17 +212,54 @@ class _OneriSayfasiState extends State<OneriSayfasi> {
                 itemCount: _oneriler.length,
                 itemBuilder: (context, index) {
                   final oneri = _oneriler[index];
+                  final imagePath = _plantNameToImagePath(oneri.plantName);
+
                   return Card(
                     margin: EdgeInsets.symmetric(vertical: 8),
                     shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12)),
                     elevation: 4,
-                    child: ListTile(
-                      title: Text(oneri.plantName,
-                          style:
-                          TextStyle(fontWeight: FontWeight.bold)),
-                      subtitle: Text(
-                          "Ortalama Puan: ${oneri.totalScore.toStringAsFixed(2)}"),
+                    child: Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: Row(
+                        children: [
+                          ClipRRect(
+                            borderRadius: BorderRadius.circular(8),
+                            child: Image.asset(
+                              imagePath,
+                              width: 60,
+                              height: 60,
+                              fit: BoxFit.cover,
+                              errorBuilder: (context, error, stackTrace) {
+                                return Container(
+                                  width: 60,
+                                  height: 60,
+                                  color: Colors.grey[300],
+                                  child: Icon(Icons.image_not_supported),
+                                );
+                              },
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  oneri.plantName,
+                                  style: TextStyle(
+                                      fontWeight: FontWeight.bold, fontSize: 16),
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  "Ortalama Puan: ${oneri.totalScore.toStringAsFixed(2)}",
+                                  style: TextStyle(color: Colors.grey[700]),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   );
                 },
