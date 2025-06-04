@@ -298,7 +298,7 @@ class _EkimYapPageState extends State<EkimYapPage> {
                       const SizedBox(height: 8),
                       ...suggestions.map((item) {
                         final plantName = item['plantName'] ?? 'Bilinmeyen bitki';
-                        final avgScore = item['averageScore']?.toStringAsFixed(2) ?? '-';
+                        final avgScore = item['totalScore']?.toStringAsFixed(2) ?? '-';
                         final yieldPerSquareMeter = item['yieldPerSquareMeter']?.toStringAsFixed(2) ?? '-';
                         return Padding(
                           padding: const EdgeInsets.symmetric(vertical: 4),
