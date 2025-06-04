@@ -346,16 +346,33 @@ class _EkimYapPageState extends State<EkimYapPage> {
                 label: 'Bitki Seç',
                 value: _selectedPlantId,
                 items: plants.map((plant) {
+                  final name = plant['name']?.toLowerCase() ?? '';
+                  final imgPath = 'assets/images/$name.jpg';
                   return DropdownMenuItem<int>(
                     value: plant['id'],
-                    child: Text(plant['plantName']),
+                    child: Row(
+                      children: [
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(6),
+                          child: Image.asset(
+                            imgPath,
+                            width: 30,
+                            height: 30,
+                            fit: BoxFit.cover,
+                            errorBuilder: (_, __, ___) {
+                              return Image.asset('assets/images/DefaultImage.jpg',
+                                  width: 30, height: 30);
+                            },
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(child: Text(plant['name'] ?? '', overflow: TextOverflow.ellipsis)),
+                      ],
+                    ),
                   );
                 }).toList(),
-                onChanged: (val) {
-                  setState(() => _selectedPlantId = val);
-                },
+                onChanged: (val) => setState(() => _selectedPlantId = val),
               ),
-
               const SizedBox(height: 10),
 
               TextField(
