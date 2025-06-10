@@ -16,11 +16,38 @@ class _HasatlarimiGosterPageState extends State<HasatlarimiGosterPage> {
   List<dynamic> harvests = [];
   bool isLoading = true;
   int? userId;
+  final Map<int, bool> _evaluatedHarvests = {}; // Hasat ID -> Değerlendirme durumu
 
   @override
   void initState() {
     super.initState();
     _fetchUserId();
+    _loadEvaluatedHarvests();
+  }
+
+  Future<void> _loadEvaluatedHarvests() async {
+    final prefs = await SharedPreferences.getInstance();
+    final evaluatedString = prefs.getString('evaluatedHarvests');
+    if (evaluatedString != null) {
+      final evaluatedMap = json.decode(evaluatedString) as Map<String, dynamic>;
+      setState(() {
+        _evaluatedHarvests.addAll(
+          evaluatedMap.map((key, value) => MapEntry(int.parse(key), value as bool)),
+        );
+      });
+    }
+  }
+
+  Future<void> _saveEvaluatedHarvest(int harvestId) async {
+    setState(() {
+      _evaluatedHarvests[harvestId] = true;
+    });
+
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(
+      'evaluatedHarvests',
+      json.encode(_evaluatedHarvests.map((k, v) => MapEntry(k.toString(), v))),
+    );
   }
 
   Future<void> _fetchUserId() async {
@@ -75,6 +102,9 @@ class _HasatlarimiGosterPageState extends State<HasatlarimiGosterPage> {
   }
 
   Widget buildHarvestCard(Map<String, dynamic> harvest) {
+    final harvestId = harvest['id'] as int;
+    final isEvaluated = _evaluatedHarvests[harvestId] ?? false;
+
     return Card(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       elevation: 4,
@@ -103,19 +133,44 @@ class _HasatlarimiGosterPageState extends State<HasatlarimiGosterPage> {
                 infoRow('Bitki', harvest['plantName']),
                 infoRow('Ekim Miktarı', '${harvest['plantingAmount']}'),
                 infoRow('Ekim ID', '${harvest['sowingId']}'),
+                if (isEvaluated) infoRow('Durum', 'Değerlendirildi'),
               ],
             ),
             const SizedBox(height: 12),
             Align(
               alignment: Alignment.centerRight,
-              child: ElevatedButton.icon(
-                onPressed: () {
-                  Navigator.push(
+              child: isEvaluated
+                  ? Container(
+                padding: const EdgeInsets.symmetric(
+                    horizontal: 16, vertical: 10),
+                decoration: BoxDecoration(
+                  color: Colors.grey[400],
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.check_circle, size: 20, color: Colors.white),
+                    const SizedBox(width: 8),
+                    Text(
+                      'Değerlendirildi',
+                      style: GoogleFonts.notoSans(
+                          fontSize: 15,
+                          color: Colors.white),
+                    ),
+                  ],
+                ),
+              )
+                  : ElevatedButton.icon(
+                onPressed: () async {
+                  await Navigator.push(
                     context,
                     MaterialPageRoute(
                       builder: (context) => DegerlendirPage(harvest: harvest),
                     ),
                   );
+                  // Butona basıldığında değerlendirildi olarak işaretle
+                  await _saveEvaluatedHarvest(harvestId);
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.green[700],
