@@ -255,6 +255,7 @@ class _OneriSayfasiState extends State<OneriSayfasi> {
                                   "Ortalama Puan: ${oneri.totalScore.toStringAsFixed(2)}",
                                   style: TextStyle(color: Colors.grey[700]),
                                 ),
+
                               ],
                             ),
                           ),

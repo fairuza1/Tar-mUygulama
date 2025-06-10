@@ -1,4 +1,3 @@
-// ... diğer importlar
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
@@ -87,15 +86,16 @@ class _ArazilerimiGosterPageState extends State<ArazilerimiGosterPage> {
     ScaffoldMessenger.of(context).showSnackBar(snackBar);
   }
 
-  Widget buildLandSizeCircleIndicator(double landSize) {
-    double percent = (landSize / 100).clamp(0.0, 1.0);
+  /// 🔄 Güncellenmiş: Kalan alanı ve yüzdeyi göster
+  Widget buildRemainingSizeCircleIndicator(double remainingSize, double landSize) {
+    double percent = (remainingSize / landSize).clamp(0.0, 1.0);
     return CircularPercentIndicator(
       radius: 50.0,
       lineWidth: 8.0,
       animation: true,
       percent: percent,
       center: Text(
-        '${landSize.toStringAsFixed(1)} ha',
+        '${remainingSize.toStringAsFixed(1)} ha',
         style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14.0),
       ),
       circularStrokeCap: CircularStrokeCap.round,
@@ -207,8 +207,11 @@ class _ArazilerimiGosterPageState extends State<ArazilerimiGosterPage> {
                         ),
                       ),
                       const SizedBox(width: 10),
-                      buildLandSizeCircleIndicator(
-                        (land['landSize']?.toDouble() ?? 0.0),
+
+                      /// 🔄 Güncellenmiş kısım: kalan alanı göster
+                      buildRemainingSizeCircleIndicator(
+                        (land['remainingSize']?.toDouble() ?? 0.0),
+                        (land['landSize']?.toDouble() ?? 1.0),
                       ),
                     ],
                   ),

@@ -298,7 +298,9 @@ class _EkimYapPageState extends State<EkimYapPage> {
                       const SizedBox(height: 8),
                       ...suggestions.map((item) {
                         final plantName = item['plantName'] ?? 'Bilinmeyen bitki';
-                        final avgScore = item['totalScore']?.toStringAsFixed(2) ?? '-';
+                        final avgScore = item['totalScore'] != null
+                            ? (item['totalScore'] * 20).toStringAsFixed(2)
+                            : '-';
                         final yieldPerSquareMeter = item['yieldPerSquareMeter']?.toStringAsFixed(2) ?? '-';
                         return Padding(
                           padding: const EdgeInsets.symmetric(vertical: 4),
@@ -309,8 +311,8 @@ class _EkimYapPageState extends State<EkimYapPage> {
                               Column(
                                 crossAxisAlignment: CrossAxisAlignment.end,
                                 children: [
-                                  Text('Ortalama Puan: $avgScore', style: GoogleFonts.notoSans(fontSize: 14)),
-                                  Text('Verim: $yieldPerSquareMeter', style: GoogleFonts.notoSans(fontSize: 14)),
+                                  Text('başarı oranı %: $avgScore', style: GoogleFonts.notoSans(fontSize: 14)),
+                                  Text('metrekare başına düşen: $yieldPerSquareMeter', style: GoogleFonts.notoSans(fontSize: 14)),
                                 ],
                               ),
                             ],
