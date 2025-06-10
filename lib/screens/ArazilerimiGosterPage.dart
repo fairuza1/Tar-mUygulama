@@ -86,7 +86,7 @@ class _ArazilerimiGosterPageState extends State<ArazilerimiGosterPage> {
     ScaffoldMessenger.of(context).showSnackBar(snackBar);
   }
 
-  /// 🔄 Güncellenmiş: Kalan alanı ve yüzdeyi göster
+
   Widget buildRemainingSizeCircleIndicator(double remainingSize, double landSize) {
     double percent = (remainingSize / landSize).clamp(0.0, 1.0);
     return CircularPercentIndicator(
@@ -208,7 +208,7 @@ class _ArazilerimiGosterPageState extends State<ArazilerimiGosterPage> {
                       ),
                       const SizedBox(width: 10),
 
-                      /// 🔄 Güncellenmiş kısım: kalan alanı göster
+
                       buildRemainingSizeCircleIndicator(
                         (land['remainingSize']?.toDouble() ?? 0.0),
                         (land['landSize']?.toDouble() ?? 1.0),

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'EkimlerDashboardPage.dart'; // EkimlerDashboardPage import edildi
 
 class EkimYapPage extends StatefulWidget {
   const EkimYapPage({Key? key}) : super(key: key);
@@ -15,10 +16,10 @@ class _EkimYapPageState extends State<EkimYapPage> {
   List<dynamic> lands = [];
   List<dynamic> categories = [];
   List<dynamic> plants = [];
-  List<dynamic> suggestions = []; // öneriler için liste
+  List<dynamic> suggestions = [];
 
   bool isLoading = true;
-  bool isLoadingSuggestions = false; // öneri yükleniyor durumu
+  bool isLoadingSuggestions = false;
 
   final TextEditingController _plantingAmountController = TextEditingController();
   DateTime? _selectedDate;
@@ -109,7 +110,6 @@ class _EkimYapPageState extends State<EkimYapPage> {
       suggestions = [];
     });
 
-    // Seçilen arazinin şehir, ilçe bilgilerini bul
     final selectedLand = lands.firstWhere((land) => land['id'] == landId, orElse: () => null);
     if (selectedLand == null) {
       _showSnackbar('Seçilen arazi bilgisi bulunamadı.', Colors.red);
@@ -120,7 +120,6 @@ class _EkimYapPageState extends State<EkimYapPage> {
     final city = selectedLand['city'] ?? '';
     final district = selectedLand['district'] ?? '';
     final village = selectedLand['village'] ?? '';
-
 
     try {
       final response = await http.get(
@@ -146,7 +145,7 @@ class _EkimYapPageState extends State<EkimYapPage> {
     }
   }
 
-  Future<void> _submitSowing() async {
+  Future<void> _submitSowing({bool navigate = false}) async {
     if (_plantingAmountController.text.isEmpty ||
         _selectedDate == null ||
         _selectedLandId == null ||
@@ -190,6 +189,13 @@ class _EkimYapPageState extends State<EkimYapPage> {
 
       if (response.statusCode == 201) {
         _showSnackbar('Ekim başarıyla kaydedildi!', Colors.green);
+        if (navigate) {
+          // Yönlendirme yapılacaksa
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => EkimlerDashboardPage()),
+          );
+        }
       } else {
         final decoded = json.decode(response.body);
         _showSnackbar(decoded['error'] ?? 'Bilinmeyen bir hata oluştu.', Colors.red);
@@ -279,7 +285,6 @@ class _EkimYapPageState extends State<EkimYapPage> {
               ),
               const SizedBox(height: 10),
 
-              // Öneriler gösterimi
               if (isLoadingSuggestions)
                 const Center(child: CircularProgressIndicator())
               else if (suggestions.isNotEmpty)
@@ -392,11 +397,10 @@ class _EkimYapPageState extends State<EkimYapPage> {
                 children: [
                   Expanded(
                     child: Text(
-                      _selectedDate == null
-                          ? 'Ekim Tarihi Seçiniz'
-                          : 'Seçilen Tarih: ${_selectedDate!.toLocal().toString().split(' ')[0]}',
-                      style: GoogleFonts.notoSans(fontSize: 16),
-                    ),
+                        _selectedDate == null
+                            ? 'Ekim Tarihi Seçiniz'
+                            : 'Seçilen Tarih: ${_selectedDate!.toLocal().toString().split(' ')[0]}',
+                        style: GoogleFonts.notoSans(fontSize: 16)),
                   ),
                   TextButton(
                     onPressed: () => _pickDate(context),
@@ -408,8 +412,21 @@ class _EkimYapPageState extends State<EkimYapPage> {
               const SizedBox(height: 20),
 
               ElevatedButton(
-                onPressed: _submitSowing,
-                child: const Text('Ekim Yap'),
+                onPressed: () => _submitSowing(),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.green,
+                  minimumSize: const Size(double.infinity, 50),
+                ),
+                child: const Text('Ekim Yapmaya devam et', style: TextStyle(color: Colors.white)),
+              ),
+              const SizedBox(height: 10),
+              ElevatedButton(
+                onPressed: () => _submitSowing(navigate: true),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.blue,
+                  minimumSize: const Size(double.infinity, 50),
+                ),
+                child: const Text('Ekim Yap ve ilerle', style: TextStyle(color: Colors.white)),
               ),
             ],
           ),
