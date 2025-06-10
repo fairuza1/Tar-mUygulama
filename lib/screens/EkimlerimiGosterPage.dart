@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'HasatlarimiGosterPage.dart';
 
 class EkimlerimiGosterPage extends StatefulWidget {
   const EkimlerimiGosterPage({Key? key}) : super(key: key);
@@ -106,7 +107,10 @@ class _EkimlerimiGosterPageState extends State<EkimlerimiGosterPage> {
       final response = await http.post(
         Uri.parse('http://10.0.2.2:8080/harvests'),
         headers: {'Content-Type': 'application/json'},
-        body: json.encode({'sowingId': sowingId, 'harvestDate': DateTime.now().toIso8601String()}),
+        body: json.encode({
+          'sowingId': sowingId,
+          'harvestDate': DateTime.now().toIso8601String()
+        }),
       );
 
       if (response.statusCode == 201) {
@@ -115,6 +119,11 @@ class _EkimlerimiGosterPageState extends State<EkimlerimiGosterPage> {
         });
         await _saveHarvestedSowings();
         _showSnackbar('Hasat başarıyla tamamlandı!', Colors.green);
+
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => HasatlarimiGosterPage()),
+        );
       } else {
         _showSnackbar('Hasat işlemi başarısız. Durum Kodu: ${response.statusCode}', Colors.red);
       }
