@@ -30,6 +30,7 @@ environment:
 # versions available, run `flutter pub outdated`.
 dependencies:
   percent_indicator: ^4.2.3
+  shimmer: ^3.0.0
   flutter:
     sdk: flutter
 
@@ -71,6 +72,8 @@ flutter:
     - assets/images/
     - assets/leaf_corner.svg
     - assets/empty_state.svg
+    - assets/hata.svg
+
 
 
 
