@@ -241,13 +241,7 @@ class _HasatlarimiGosterPageState extends State<HasatlarimiGosterPage> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text(
-                          'Ekim ID: ${harvest['sowingId']}',
-                          style: GoogleFonts.notoSans(
-                            fontSize: 14,
-                            color: Colors.grey.shade600,
-                          ),
-                        ),
+
                         isEvaluated
                             ? _buildEvaluatedBadge()
                             : _buildEvaluateButton(harvest, harvestId),

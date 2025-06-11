@@ -110,8 +110,10 @@ class _OneriSayfasiState extends State<OneriSayfasi> {
     }
   }
 
+
   Future<List<dynamic>> _loadJsonData(String path) async {
-    final jsonString = await rootBundle.loadString(path);
+    final byteData = await rootBundle.load(path);
+    final jsonString = utf8.decode(byteData.buffer.asUint8List());
     return json.decode(jsonString) as List<dynamic>;
   }
 
@@ -135,6 +137,7 @@ class _OneriSayfasiState extends State<OneriSayfasi> {
 
     try {
       final response = await http.get(uri);
+
 
       if (response.statusCode == 200) {
         final List<dynamic> jsonData = jsonDecode(response.body);
@@ -202,21 +205,8 @@ class _OneriSayfasiState extends State<OneriSayfasi> {
     );
   }
 
-  String _plantNameToImagePath(String plantName) {
-    String cleaned = plantName
-        .toLowerCase()
-        .replaceAll(' ', '')
-        .replaceAll('ç', 'c')
-        .replaceAll('ğ', 'g')
-        .replaceAll('ı', 'i')
-        .replaceAll('ö', 'o')
-        .replaceAll('ş', 's')
-        .replaceAll('ü', 'u');
-    return 'assets/images/plants/$cleaned.png';
-  }
 
   Widget _buildOneriCard(OneriModel oneri) {
-    final imagePath = _plantNameToImagePath(oneri.plantName);
     final ratingPercentage = (oneri.totalScore / 5.0) * 100;
 
     return Card(
@@ -241,15 +231,6 @@ class _OneriSayfasiState extends State<OneriSayfasi> {
                 ),
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(12),
-                  child: Image.asset(
-                    imagePath,
-                    fit: BoxFit.cover,
-                    errorBuilder: (context, error, stackTrace) {
-                      return Center(
-                        child: Icon(Icons.eco, size: 40, color: Colors.green[300]),
-                      );
-                    },
-                  ),
                 ),
               ),
               SizedBox(width: 16),
@@ -325,7 +306,7 @@ class _OneriSayfasiState extends State<OneriSayfasi> {
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
         SvgPicture.asset(
-          'assets/images/empty_state.svg',
+          'assets/empty_state.svg',
           width: 200,
           color: Colors.green[100],
         ),
