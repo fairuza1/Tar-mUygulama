@@ -231,8 +231,16 @@ class _OneriSayfasiState extends State<OneriSayfasi> {
                 ),
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(12),
+                  child: Image.asset(
+                    'assets/images/${oneri.plantName.toLowerCase()}.jpg',
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) {
+                      return const Icon(Icons.image_not_supported, size: 40, color: Colors.grey);
+                    },
+                  ),
                 ),
               ),
+
               SizedBox(width: 16),
               Expanded(
                 child: Column(
